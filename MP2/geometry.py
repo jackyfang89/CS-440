@@ -49,6 +49,7 @@ def sign(val):
 def check_lines_intersect(line1, line2):
     #test x range
     #ensure line1 and line2 pointing right
+    temp1, temp2 = line1, line2
     if line1[2] < line1[0]: 
         line1 = (line1[2], line1[3], line1[0], line1[1])
     if line2[2] < line2[0]: 
@@ -61,19 +62,30 @@ def check_lines_intersect(line1, line2):
         line1 = (line1[2], line1[3], line1[0], line1[1])
     if line2[3] < line2[1]: 
         line2 = (line2[2], line2[3], line2[0], line2[1])
-    
+
     if max(line1[1], line2[1]) > min(line1[3], line1[3]): return False
 
-    return True
+    #revert lines to original
+    line1, line2 = temp1, temp2
+    temp1, temp2 = (line1[0], line1[1], line2[0], line2[1]), (line1[0], line1[1], line2[2], line2[3])
+    sign1, sign2 = sign(cross_product(line2, temp1)), sign(cross_product(line2, temp2))
+    if 
+
+    # return True
 
 def min_dist_between_lines(line1, line2):
     #check if lines intersect
-    if check_lines_intersect(line1, line2): return 0
+    if check_lines_intersect(line1, line2): 
+        print("intersect: " + str(line1) + ", " + str(line2))
+        return 0
 
     d1 = dot_to_dot_dist((line1[0], line1[1]), (line2[0], line2[1]))
     d2 = dot_to_dot_dist((line1[0], line1[1]), (line2[2], line2[3]))
     d3 = dot_to_dot_dist((line1[2], line1[3]), (line2[0], line2[1]))
     d4 = dot_to_dot_dist((line1[2], line1[3]), (line2[2], line2[3]))
+
+    print("distances: ", end = "")
+    print(d1, d2, d3, d4)
 
     return min(d1, d2, d3, d4)
 
