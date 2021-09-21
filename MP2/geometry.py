@@ -46,32 +46,45 @@ def sign(val):
     if val < 0: return -1
     if val > 0: return 1
 
+def check_collinear_intersect(line1, line2):
+    #assumes line1 and line2 collinear.
+    #horizontal case: make sure pointing left to right
+    if line1[2] < line1[0]: line1 = (line1[2], line1[3], line1[0], line1[1])
+    if line2[2] < line2[0]: line2 = (line2[2], line2[3], line2[0], line2[1])
+
+    if max(line1[0], line2[0]) > min(line1[2], line2[2]): return False
+
+    #vertical case: make sure pointing up
+    if line1[3] < line1[1]: line1 = (line1[2], line1[3], line1[0], line1[0])
+    if line2[3] < line2[1]: line2 = (line2[2], line2[3], line2[0], line2[0])
+
+    if max(line1[1], line2[1]) > min(line1[3], line2[3]): return False
+
+    return True
+
+def orientation(a, b, c):
+    #a, b, c are points
+    #use the slope of AB(m1) compared to slope of BC(m2).
+    #if m1 = m2, then collinear. if m1 > m2, then clockwise turn. if m1 < m2, ccw turn.
+    #we can use m1 - m2. since m = dy/dx, we can do mult instead of div
+    #return either 0, 1, or 2 as collinear, CW, CCW. 
+
+    delta = (b[1] - a[1]) * (c[0] - b[0]) - (c[1] - b[1]) * (b[0] - a[0])
+    if delta == 0: return 0
+    if delta > 0 : return 1
+    if delta < 0 : return 2
+
 def check_lines_intersect(line1, line2):
-    #test x range
-    #ensure line1 and line2 pointing right
-    temp1, temp2 = line1, line2
-    if line1[2] < line1[0]: 
-        line1 = (line1[2], line1[3], line1[0], line1[1])
-    if line2[2] < line2[0]: 
-        line2 = (line2[2], line2[3], line2[0], line2[1])
+    #we have 4 total orientations. let line1 = a, b and line2 = c,d
+    #then we have: (a, b, c), (a, b, d), (c, d, a), (c, d, b)
+    a, b, c, d = (line1[0], line1[1]), (line1[2], line1[3]), (line2[0], line2[1]), (line2[2], line2[3])
+    o1, o2, o3, o4 = orientation(a, b, c), orientation(a, b, d), orientation(c, d, a), orientation(c, d, b)
 
-    if max(line1[0], line2[0]) > min(line1[2], line1[2]): return False
-    #test y range
-    #ensure line1 and line2 pointing up
-    if line1[3] < line1[1]: 
-        line1 = (line1[2], line1[3], line1[0], line1[1])
-    if line2[3] < line2[1]: 
-        line2 = (line2[2], line2[3], line2[0], line2[1])
-
-    if max(line1[1], line2[1]) > min(line1[3], line1[3]): return False
-
-    #revert lines to original
-    line1, line2 = temp1, temp2
-    temp1, temp2 = (line1[0], line1[1], line2[0], line2[1]), (line1[0], line1[1], line2[2], line2[3])
-    sign1, sign2 = sign(cross_product(line2, temp1)), sign(cross_product(line2, temp2))
-    if 
-
-    # return True
+    #collinear case, where line1 and line2 are collinear
+    if o1 == 0 and o2 == 0 and o3 == 0 and o4 == 0: return check_collinear_intersect(line1, line2)
+    #intersection case, where o1 != o2 and o3 != o4
+    if o1 != o2 and o3 != o4: return True
+    return False
 
 def min_dist_between_lines(line1, line2):
     #check if lines intersect
@@ -79,43 +92,15 @@ def min_dist_between_lines(line1, line2):
         print("intersect: " + str(line1) + ", " + str(line2))
         return 0
 
-    d1 = dot_to_dot_dist((line1[0], line1[1]), (line2[0], line2[1]))
-    d2 = dot_to_dot_dist((line1[0], line1[1]), (line2[2], line2[3]))
-    d3 = dot_to_dot_dist((line1[2], line1[3]), (line2[0], line2[1]))
-    d4 = dot_to_dot_dist((line1[2], line1[3]), (line2[2], line2[3]))
+    d1 = min_dist_point_to_line((line1[0], line1[1]), line2)
+    d2 = min_dist_point_to_line((line1[2], line1[3]), line2)
+    d3 = min_dist_point_to_line((line2[0], line2[1]), line1)
+    d4 = min_dist_point_to_line((line2[2], line2[3]), line1)
 
-    print("distances: ", end = "")
+    print("line distances: ", end = "")
     print(d1, d2, d3, d4)
 
     return min(d1, d2, d3, d4)
-
-
-# def min_dist_between_lines(line1, line2):
-#     #line 1 is reference line!
-
-#     #check if lines cross first
-
-#     temp1 = (line1[0], line1[1], line2[0], line2[1])
-#     temp2 = (line1[0], line1[1], line2[2], line2[3])
-
-#     sign1 = sign(cross_product(line1, temp1))
-#     sign2 = sign(cross_product(line1, temp2))
-
-#     print("lines: " + str(line1) + ", " + str(line2) + ", signs: " + str(sign1) + "," + str(sign2))
-
-#     if sign1 == 0 and sign2 == 0: return 0 #collinear
-#     if sign1 != sign2: #potentially crosses
-
-    
-#     d1 = dot_to_dot_dist((line1[0], line1[1]), (line2[0], line2[1]))
-#     d2 = dot_to_dot_dist((line1[0], line1[1]), (line2[2], line2[3]))
-#     d3 = dot_to_dot_dist((line1[2], line1[3]), (line2[0], line2[1]))
-#     d4 = dot_to_dot_dist((line1[2], line1[3]), (line2[2], line2[3]))
-
-#     print("distances: ", end = "")
-#     print(d1, d2, d3, d4)
-
-#     return min(d1, d2, d3, d4)
 
 def min_dist_point_to_line(dot, line):
     dist1 = dot_to_dot_dist(dot, (line[0], line[1])) #dist to endpoint 1
@@ -153,7 +138,7 @@ def min_dist_point_to_line(dot, line):
 
     # print("dot: " + str(dot) + ", point " + str(point) + ", line: " + str(line) + ", distances: ", end = " ")
     # print("proj: " + str(proj) + ", point: " + str(dot) + ", line: " + str(line) + ", distances: ", end = "")
-    print("distances: ", end = "")
+    print("point distances: ", end = "")
     print(dist1, dist2, dist3)
 
     return min(dist1, dist2, dist3)
@@ -169,15 +154,10 @@ def does_alien_touch_wall(alien, walls, granularity):
         Return:
             True if touched, False if not
     """
-
-    # print("touch wall")
-
     tolerance = alien.get_width() + granularity / math.sqrt(2)
     shape = alien.get_shape()
     print("alien: ", end = "")
     print(alien.get_centroid(), shape, alien.get_width(), alien.get_length(), granularity / math.sqrt(2))
-    # print(shape)
-    # print("walls: " + str(walls))
     
     if alien.is_circle():
         center = alien.get_centroid()
@@ -198,7 +178,7 @@ def does_alien_touch_wall(alien, walls, granularity):
         # tolerance = alien.get_width() + granularity / math.sqrt(2)
         for wall in walls:
             # print(line, wall)
-            # print(wall)
+            print(wall)
             dist = min_dist_between_lines(line, wall)
             if dist < tolerance or np.isclose(dist, tolerance): 
                 print("true. wall: " + str(wall) + ", dist: " + str(dist))
@@ -395,7 +375,7 @@ if __name__ == '__main__':
                         ]
 
     for i in range(len(alien_positions)):
-        test_helper(alien_ball, alien_positions[i], alien_ball_truths[i])
+        # test_helper(alien_ball, alien_positions[i], alien_ball_truths[i])
         test_helper(alien_horz, alien_positions[i], alien_horz_truths[i])
         # test_helper(alien_vert, alien_positions[i], alien_vert_truths[i])
 
