@@ -46,30 +46,64 @@ def sign(val):
     if val < 0: return -1
     if val > 0: return 1
 
-def min_dist_between_lines(line1, line2):
-    #check if lines cross first
-    # a = vec_form((line2[0], line2[1], line1[0], line1[1]))
-    # b = vec_form((line2[0], line2[1], line1[2], line1[3]))
+def check_lines_intersect(line1, line2):
+    #test x range
+    #ensure line1 and line2 pointing right
+    if line1[2] < line1[0]: 
+        line1 = (line1[2], line1[3], line1[0], line1[1])
+    if line2[2] < line2[0]: 
+        line2 = (line2[2], line2[3], line2[0], line2[1])
 
-    # temp1 = (line1[0], line1[1], line1[0] + a[0], line1[0] + a[1])
-    # temp2 = (line1[0], line1[1], line1[0] + b[0], line1[0] + b[1])
-
-    temp1 = (line2[0], line2[1], line1[0], line1[1])
-    temp2 = (line2[0], line2[1], line1[2], line1[3])
-
-    sign1 = sign(cross_product(line2, temp1))
-    sign2 = sign(cross_product(line2, temp2))
-
-    print("lines: " + str(line1) + ", " + str(line2) + ", signs: " + str(sign1) + "," + str(sign2))
-
-    if sign1 != sign2: return 0 #crosses
+    if max(line1[0], line2[0]) > min(line1[2], line1[2]): return False
+    #test y range
+    #ensure line1 and line2 pointing up
+    if line1[3] < line1[1]: 
+        line1 = (line1[2], line1[3], line1[0], line1[1])
+    if line2[3] < line2[1]: 
+        line2 = (line2[2], line2[3], line2[0], line2[1])
     
+    if max(line1[1], line2[1]) > min(line1[3], line1[3]): return False
+
+    return True
+
+def min_dist_between_lines(line1, line2):
+    #check if lines intersect
+    if check_lines_intersect(line1, line2): return 0
+
     d1 = dot_to_dot_dist((line1[0], line1[1]), (line2[0], line2[1]))
     d2 = dot_to_dot_dist((line1[0], line1[1]), (line2[2], line2[3]))
     d3 = dot_to_dot_dist((line1[2], line1[3]), (line2[0], line2[1]))
     d4 = dot_to_dot_dist((line1[2], line1[3]), (line2[2], line2[3]))
 
     return min(d1, d2, d3, d4)
+
+
+# def min_dist_between_lines(line1, line2):
+#     #line 1 is reference line!
+
+#     #check if lines cross first
+
+#     temp1 = (line1[0], line1[1], line2[0], line2[1])
+#     temp2 = (line1[0], line1[1], line2[2], line2[3])
+
+#     sign1 = sign(cross_product(line1, temp1))
+#     sign2 = sign(cross_product(line1, temp2))
+
+#     print("lines: " + str(line1) + ", " + str(line2) + ", signs: " + str(sign1) + "," + str(sign2))
+
+#     if sign1 == 0 and sign2 == 0: return 0 #collinear
+#     if sign1 != sign2: #potentially crosses
+
+    
+#     d1 = dot_to_dot_dist((line1[0], line1[1]), (line2[0], line2[1]))
+#     d2 = dot_to_dot_dist((line1[0], line1[1]), (line2[2], line2[3]))
+#     d3 = dot_to_dot_dist((line1[2], line1[3]), (line2[0], line2[1]))
+#     d4 = dot_to_dot_dist((line1[2], line1[3]), (line2[2], line2[3]))
+
+#     print("distances: ", end = "")
+#     print(d1, d2, d3, d4)
+
+#     return min(d1, d2, d3, d4)
 
 def min_dist_point_to_line(dot, line):
     dist1 = dot_to_dot_dist(dot, (line[0], line[1])) #dist to endpoint 1
@@ -127,8 +161,9 @@ def does_alien_touch_wall(alien, walls, granularity):
     # print("touch wall")
 
     tolerance = alien.get_width() + granularity / math.sqrt(2)
-    shape = alien.get_shape_idx()
-    # print(alien.get_centroid(), shape, alien.get_width(), alien.get_length())
+    shape = alien.get_shape()
+    print("alien: ", end = "")
+    print(alien.get_centroid(), shape, alien.get_width(), alien.get_length(), granularity / math.sqrt(2))
     # print(shape)
     # print("walls: " + str(walls))
     
@@ -147,7 +182,7 @@ def does_alien_touch_wall(alien, walls, granularity):
         head_and_tail = alien.get_head_and_tail()
         # print(head_and_tail)
         line = (head_and_tail[0][0], head_and_tail[0][1], head_and_tail[1][0], head_and_tail[1][1])
-        # print(line)
+        print(line)
         # tolerance = alien.get_width() + granularity / math.sqrt(2)
         for wall in walls:
             # print(line, wall)
