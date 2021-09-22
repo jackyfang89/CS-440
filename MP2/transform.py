@@ -21,6 +21,30 @@ from const import *
 from util import *
 import os
 
+def one_level_empty_maze_ascii(window, granularity):
+    row, col = window[1] / granularity + 1, window[0] / granularity + 1
+    maze_ascii = []
+
+    for i in range(row):
+        if i == 0 or i == row - 1:
+            temp = ['%'] * col
+            maze_ascii.append(temp)
+        else:
+            temp = [' '] * (col - 2)
+            temp = ['%'] + temp + ['%']
+            maze_ascii.append(temp)
+
+    return maze_ascii
+
+# def complete_empty_maze_ascii(window, granularity):
+#     maze_ascii = []
+#     for i in range(3):
+#         maze_ascii.append(one_level_empty_maze_ascii(window, granularity))
+#         maze_ascii.append(['#'])
+#     return maze_ascii
+
+
+
 def transformToMaze(alien, goals, walls, window,granularity):
     """This function transforms the given 2D map to the maze in MP1.
     
@@ -34,7 +58,18 @@ def transformToMaze(alien, goals, walls, window,granularity):
             Maze: the maze instance generated based on input arguments.
 
     """
-    pass
+    # maze_ascii = complete_empty_maze_ascii(window, granularity)
+    hori, ball, vert = one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity)
+    row, col = window[1] / granularity + 1, window[0] / granularity + 1
+    offset = [0, 0, 0]
+    for i in row:
+        for j in col:
+            config = idxToConfig((i, j, 0), offset, granularity, alien) #adapt shape for each level
+
+
+    maze = Maze([row, col, 3], alien, granularity)
+
+    # pass
 
 if __name__ == '__main__':
     import configparser
