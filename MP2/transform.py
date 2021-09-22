@@ -37,7 +37,9 @@ def one_level_empty_maze_ascii(window, granularity):
     return maze_ascii
 
 def char_to_add(index, alien, granularity, goals, walls, offset):
+    # print("config!")
     config = idxToConfig(index, offset, granularity, alien)
+    # print("config done!")
     alien.set_alien_config(config)
     if does_alien_touch_wall(alien, walls, granularity): return '%'
     elif does_alien_touch_goal(alien, goals):            return '.'
@@ -69,16 +71,24 @@ def transformToMaze(alien, goals, walls, window,granularity):
     hori, ball, vert = one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity)
     row, col = window[1] / granularity + 1, window[0] / granularity + 1
     offset = [0, 0, 0]
+
+    start = alien.get_centroid()
+    maze_ascii = []
+
+    #build maze with either ' ', '.', or '%' 
     for i in row:
         for j in col:
             hori_char = char_to_add((i, j, 0), alien, granularity, goals, walls, offset)
             vert_char = char_to_add((i, j, 1), alien, granularity, goals, walls, offset)
             ball_char = char_to_add((i, j, 2), alien, granularity, goals, walls, offset)
+            
+            cell = [hori_char, vert_char, ball_char] #each cell of maze_ascii is list of [a, b, c], where a = char at level 0, b is char at level 1...etc
+            maze_ascii.append(cell)
 
-            hori[i][j], vert[i][j], ball[i][j],  = hori_char, vert_char, ball_char
 
-    maze = Maze([row, col, 3], alien, granularity)
-
+    maze = Maze(maze_ascii, alien, granularity)
+    maze.saveToFile()
+    return maze
     # pass
 
 if __name__ == '__main__':
