@@ -36,6 +36,13 @@ def one_level_empty_maze_ascii(window, granularity):
 
     return maze_ascii
 
+def char_to_add(index, alien, granularity, goals, walls, offset):
+    config = idxToConfig(index, offset, granularity, alien)
+    alien.set_alien_config(config)
+    if does_alien_touch_wall(alien, walls, granularity): return '%'
+    elif does_alien_touch_goal(alien, goals):            return '.'
+    else:                                                 return ' '
+
 # def complete_empty_maze_ascii(window, granularity):
 #     maze_ascii = []
 #     for i in range(3):
