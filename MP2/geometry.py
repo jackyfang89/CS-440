@@ -198,11 +198,18 @@ def does_alien_touch_goal(alien, goals):
             True if a goal is touched, False if not.
     """
     
-    center = alien.get_centroid()
-    for goal in goals:
-        dist = dot_to_dot_dist(center, (goal[0], goal[1])) 
-        tolerance = goal[2] + alien.get_width()
-        if dist < tolerance or np.isclose(dist, tolerance): return True
+    if alien.is_circle():
+        for goal in goals:
+            dist = dot_to_dot_dist(alien.get_centroid(), (goal[0], goal[1]))
+            tolerance = alien.get_width() + goal[2]
+            if dist < tolerance or np.isclose(dist, tolerance): return True
+    else:
+        head_n_tail = alien.get_head_and_tail()
+        line = (head_n_tail[0][0], head_n_tail[0][1], head_n_tail[1][0], head_n_tail[1][1])
+        for goal in goals:
+            dist = min_dist_point_to_line((goal[0], goal[1]), line)
+            tolerance = alien.get_width() + goal[2]
+            if dist < tolerance or np.isclose(dist, tolerance): return True
     return False
 
 def is_alien_within_window(alien, window,granularity):
@@ -263,11 +270,11 @@ if __name__ == '__main__':
 
         touch_wall_result = does_alien_touch_wall(alien, walls, 0) 
         # touch_goal_result = does_alien_touch_goal(alien, goals)
-        # in_window_result = is_alien_within_window(alien, window, 0)
+        in_window_result = is_alien_within_window(alien, window, 0)
 
         assert touch_wall_result == truths[0], f'does_alien_touch_wall(alien, walls) with alien config {config} returns {touch_wall_result}, expected: {truths[0]}'
         # assert touch_goal_result == truths[1], f'does_alien_touch_goal(alien, goals) with alien config {config} returns {touch_goal_result}, expected: {truths[1]}'
-        # assert in_window_result == truths[2], f'is_alien_within_window(alien, window) with alien config {config} returns {in_window_result}, expected: {truths[2]}'
+        assert in_window_result == truths[2], f'is_alien_within_window(alien, window) with alien config {config} returns {in_window_result}, expected: {truths[2]}'
 
     #Initialize Aliens and perform simple sanity check. 
     alien_ball = Alien((30,120), [40, 0, 40], [11, 25, 11], ('Horizontal','Ball','Vertical'), 'Ball', window)
@@ -377,7 +384,7 @@ if __name__ == '__main__':
     for i in range(len(alien_positions)):
         # test_helper(alien_ball, alien_positions[i], alien_ball_truths[i])
         test_helper(alien_horz, alien_positions[i], alien_horz_truths[i])
-        # test_helper(alien_vert, alien_positions[i], alien_vert_truths[i])
+        test_helper(alien_vert, alien_positions[i], alien_vert_truths[i])
 
     #Edge case coincide line endpoints
     test_helper(edge_horz_alien, edge_horz_alien.get_centroid(), (True, False, False))
