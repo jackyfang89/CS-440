@@ -88,58 +88,33 @@ def check_lines_intersect(line1, line2):
 
 def min_dist_between_lines(line1, line2):
     #check if lines intersect
-    if check_lines_intersect(line1, line2): 
-        print("intersect: " + str(line1) + ", " + str(line2))
-        return 0
+    if check_lines_intersect(line1, line2): return 0
 
     d1 = min_dist_point_to_line((line1[0], line1[1]), line2)
     d2 = min_dist_point_to_line((line1[2], line1[3]), line2)
     d3 = min_dist_point_to_line((line2[0], line2[1]), line1)
     d4 = min_dist_point_to_line((line2[2], line2[3]), line1)
 
-    print("line distances: ", end = "")
-    print(d1, d2, d3, d4)
-
     return min(d1, d2, d3, d4)
 
 def min_dist_point_to_line(dot, line):
     dist1 = dot_to_dot_dist(dot, (line[0], line[1])) #dist to endpoint 1
     dist2 = dot_to_dot_dist(dot, (line[2], line[3])) #dist to endpoint 2
-    
-    #determine where dot lands in relation to line by getting the vectors 
-    #of the two endpoints pointing to dot. if the signs match, then the closest point is 
-    #one of the endpoints. if the signs differ, then the point is btween the endpoints
 
     start_to_dot = (line[0], line[1], dot[0], dot[1])
     end_to_dot = (line[2], line[3], dot[0], dot[1])
     sign1 = sign(dot_product(line, start_to_dot))
     sign2 = sign(dot_product(line, end_to_dot))
 
-    # print("signs: ", end = "")
-    # print(sign1, sign2, end = "")
-    # print(", point: " + str(dot) + ", line: " + str(line))
-
     if sign1 == sign2: 
         if sign1 == -1: return dist1
         else:           return dist2
     
-    
     length_of_line = line_length(line)
-    # print(length_of_line)
     proj = dot_product(line, start_to_dot) / length_of_line
-
-
-    # print("proj: " + str(proj) + " len: " + str(length_of_line) + " dot length: " + str(line_length(dot_to_line_start)))
-    #calculate point of dot projected onto line
     v = vec_form(line)
     point = (line[0] + proj * v[0] / length_of_line, line[1] + proj * v[1] / length_of_line)
-    # print("new point: " + str(point))
     dist3 = dot_to_dot_dist(dot, point)
-
-    # print("dot: " + str(dot) + ", point " + str(point) + ", line: " + str(line) + ", distances: ", end = " ")
-    # print("proj: " + str(proj) + ", point: " + str(dot) + ", line: " + str(line) + ", distances: ", end = "")
-    print("point distances: ", end = "")
-    print(dist1, dist2, dist3)
 
     return min(dist1, dist2, dist3)
 
@@ -155,36 +130,19 @@ def does_alien_touch_wall(alien, walls, granularity):
             True if touched, False if not
     """
     tolerance = alien.get_width() + granularity / math.sqrt(2)
-    shape = alien.get_shape()
-    print("alien: ", end = "")
-    print(alien.get_centroid(), shape, alien.get_width(), alien.get_length(), granularity / math.sqrt(2))
     
     if alien.is_circle():
         center = alien.get_centroid()
-        # tolerance = alien.get_width() + granularity / math.sqrt(2)
-        # print(center)
         for wall in walls:
-            # print("xda: " + str(wall))
             dist = min_dist_point_to_line(center, wall)
-            # print("dist: " + str(dist) + ", tolerance: " + str(tolerance))
-            if dist < tolerance or np.isclose(dist, tolerance): 
-                print("true: " + str(wall))
-                return True
+            if dist < tolerance or np.isclose(dist, tolerance): return True
     else:
         head_and_tail = alien.get_head_and_tail()
-        # print(head_and_tail)
         line = (head_and_tail[0][0], head_and_tail[0][1], head_and_tail[1][0], head_and_tail[1][1])
-        print(line)
-        # tolerance = alien.get_width() + granularity / math.sqrt(2)
         for wall in walls:
-            # print(line, wall)
-            print(wall)
             dist = min_dist_between_lines(line, wall)
-            if dist < tolerance or np.isclose(dist, tolerance): 
-                print("true. wall: " + str(wall) + ", dist: " + str(dist))
-                return True
+            if dist < tolerance or np.isclose(dist, tolerance): return True
 
-    print("false")
     return False
 
 def does_alien_touch_goal(alien, goals):
@@ -269,11 +227,11 @@ if __name__ == '__main__':
         config = alien.get_config()
 
         touch_wall_result = does_alien_touch_wall(alien, walls, 0) 
-        # touch_goal_result = does_alien_touch_goal(alien, goals)
+        touch_goal_result = does_alien_touch_goal(alien, goals)
         in_window_result = is_alien_within_window(alien, window, 0)
 
         assert touch_wall_result == truths[0], f'does_alien_touch_wall(alien, walls) with alien config {config} returns {touch_wall_result}, expected: {truths[0]}'
-        # assert touch_goal_result == truths[1], f'does_alien_touch_goal(alien, goals) with alien config {config} returns {touch_goal_result}, expected: {truths[1]}'
+        assert touch_goal_result == truths[1], f'does_alien_touch_goal(alien, goals) with alien config {config} returns {touch_goal_result}, expected: {truths[1]}'
         assert in_window_result == truths[2], f'is_alien_within_window(alien, window) with alien config {config} returns {in_window_result}, expected: {truths[2]}'
 
     #Initialize Aliens and perform simple sanity check. 
@@ -382,7 +340,7 @@ if __name__ == '__main__':
                         ]
 
     for i in range(len(alien_positions)):
-        # test_helper(alien_ball, alien_positions[i], alien_ball_truths[i])
+        test_helper(alien_ball, alien_positions[i], alien_ball_truths[i])
         test_helper(alien_horz, alien_positions[i], alien_horz_truths[i])
         test_helper(alien_vert, alien_positions[i], alien_vert_truths[i])
 
