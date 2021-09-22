@@ -52,7 +52,7 @@ def char_to_add(index, alien, granularity, goals, walls, offset):
 #         maze_ascii.append(['#'])
 #     return maze_ascii
 
-
+import traceback
 
 def transformToMaze(alien, goals, walls, window,granularity):
     """This function transforms the given 2D map to the maze in MP1.
@@ -67,27 +67,36 @@ def transformToMaze(alien, goals, walls, window,granularity):
             Maze: the maze instance generated based on input arguments.
 
     """
+
+    print("hello")
     # maze_ascii = complete_empty_maze_ascii(window, granularity)
-    hori, ball, vert = one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity)
-    row, col = window[1] / granularity + 1, window[0] / granularity + 1
+    # hori, ball, vert = one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity)
+    row, col = int(window[1] / granularity) + 1, int(window[0] / granularity) + 1
     offset = [0, 0, 0]
 
-    start = alien.get_centroid()
+    start_idx = configToIdx(alien.get_config(), offset, granularity, alien)
     maze_ascii = []
 
     #build maze with either ' ', '.', or '%' 
-    for i in row:
-        for j in col:
+    for i in range(row):
+        curr_row = []
+        for j in range(col):
             hori_char = char_to_add((i, j, 0), alien, granularity, goals, walls, offset)
             vert_char = char_to_add((i, j, 1), alien, granularity, goals, walls, offset)
             ball_char = char_to_add((i, j, 2), alien, granularity, goals, walls, offset)
             
             cell = [hori_char, vert_char, ball_char] #each cell of maze_ascii is list of [a, b, c], where a = char at level 0, b is char at level 1...etc
-            maze_ascii.append(cell)
+            curr_row.append(cell) 
+        maze_ascii.append(curr_row)           
+            # maze_ascii.append(cell)
 
+
+    maze_ascii[start_idx[0]][start_idx[1]][0] = 'P' #set start
 
     maze = Maze(maze_ascii, alien, granularity)
-    maze.saveToFile()
+    # maze.saveToFile()
+
+    # print(traceback.format_exc())
     return maze
     # pass
 
@@ -120,6 +129,7 @@ if __name__ == '__main__':
                     generated_maze.saveToFile('./mazes/{}_granularity_{}.txt'.format(map_name,granularity))
                 except Exception as e:
                     print('Exception at maze {} and granularity {}: {}'.format(map_name,granularity,e))
+                    print(traceback.format_exc())
     def compare_test_mazes_with_gt(granularities,map_names):
         name_dict = {'%':'walls','.':'goals',' ':'free space','P':'start'}
         shape_dict = ['Horizontal','Ball','Vertical']
