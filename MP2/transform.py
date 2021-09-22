@@ -41,7 +41,7 @@ def char_to_add(index, alien, granularity, goals, walls, offset):
     alien.set_alien_config(config)
     if does_alien_touch_wall(alien, walls, granularity): return '%'
     elif does_alien_touch_goal(alien, goals):            return '.'
-    else:                                                 return ' '
+    else:                                                return ' '
 
 # def complete_empty_maze_ascii(window, granularity):
 #     maze_ascii = []
@@ -71,8 +71,11 @@ def transformToMaze(alien, goals, walls, window,granularity):
     offset = [0, 0, 0]
     for i in row:
         for j in col:
-            config = idxToConfig((i, j, 0), offset, granularity, alien) #adapt shape for each level
+            hori_char = char_to_add((i, j, 0), alien, granularity, goals, walls, offset)
+            vert_char = char_to_add((i, j, 1), alien, granularity, goals, walls, offset)
+            ball_char = char_to_add((i, j, 2), alien, granularity, goals, walls, offset)
 
+            hori[i][j], vert[i][j], ball[i][j],  = hori_char, vert_char, ball_char
 
     maze = Maze([row, col, 3], alien, granularity)
 
