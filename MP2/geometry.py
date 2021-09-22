@@ -55,8 +55,8 @@ def check_collinear_intersect(line1, line2):
     if max(line1[0], line2[0]) > min(line1[2], line2[2]): return False
 
     #vertical case: make sure pointing up
-    if line1[3] < line1[1]: line1 = (line1[2], line1[3], line1[0], line1[0])
-    if line2[3] < line2[1]: line2 = (line2[2], line2[3], line2[0], line2[0])
+    if line1[3] < line1[1]: line1 = (line1[2], line1[3], line1[0], line1[1])
+    if line2[3] < line2[1]: line2 = (line2[2], line2[3], line2[0], line2[1])
 
     if max(line1[1], line2[1]) > min(line1[3], line2[3]): return False
 
@@ -181,9 +181,6 @@ def is_alien_within_window(alien, window,granularity):
 
     walls = [(0, 0, window[0], 0), (0, 0, 0, window[1]), 
              (window[0], 0, window[0], window[1]), (0, window[1], window[0], window[1])]
-
-    center = alien.get_centroid()
-    tolerance = alien.get_width() + granularity / math.sqrt(2)
     
     return not does_alien_touch_wall(alien, walls, granularity)
 

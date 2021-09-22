@@ -59,7 +59,6 @@ def transformToMaze(alien, goals, walls, window,granularity):
             Maze: the maze instance generated based on input arguments.
 
     """
-
     row, col = int(window[1] / granularity) + 1, int(window[0] / granularity) + 1
     offset = [0, 0, 0]
 
@@ -153,6 +152,6 @@ if __name__ == '__main__':
     map_names = ['Test1','Test2','Test3','Test4','NoSolutionMap']
 
     # granularities = [2]
-    # map_names = ['Test1', 'Test2']
+    # map_names = ['Test2']
     generate_test_mazes(granularities,map_names)
     compare_test_mazes_with_gt(granularities,map_names)
