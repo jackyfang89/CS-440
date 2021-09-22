@@ -42,39 +42,37 @@ def bfs(maze, ispart1=False):
     doesn't matter which one it is
     """
 
-
-    # alien = maze.alien
     points_to_visit = list(maze.getObjectives())
-    # print(points_to_visit)
+
+    start = maze.getStart()
+
     q = []
-    q.append(maze.getStart())
+    q.append(start)
     visited = []
-    visited.append(maze.getStart())
+    visited.append(start)
 
-    last_waypoint = points_to_visit[0]
+    last_waypoint = None
     parent = {}
-    has_solution = False
-
     path = None
+
     #BFS
     while (len(q) > 0):
         curr = q.pop(0)
-        # print(str(curr[0]) + "," + str(curr[1]))
 
-        if curr in points_to_visit:
+        if maze.isObjective(curr[0], curr[1], curr[2], ispart1):
             points_to_visit.remove(curr)
             last_waypoint = curr
             has_solution = True
             break
 
-        for n in maze.getNeighbors(curr[0], curr[1], curr[2], part1=True):
+        for n in maze.getNeighbors(curr[0], curr[1], curr[2], ispart1):
             if n not in visited:
                 parent[n] = curr
                 q.append(n)
                 visited.append(n)
     
     #get path from parent
-    if has_solution:
+    if last_waypoint:
         path = [last_waypoint]
         while path[-1] != maze.getStart():
             path.append(parent[path[-1]])
