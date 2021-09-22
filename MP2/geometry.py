@@ -179,28 +179,12 @@ def is_alien_within_window(alien, window,granularity):
             granularity (int): The granularity of the map
     """
 
-    # print("within window")
-    # print(alien.get_shape())
-    print("alien: ", end = "")
-    print(alien.get_centroid(), alien.get_shape(), alien.get_width())
-    print("maze: ", end = "")
-    print(window, granularity)
     walls = [(0, 0, window[0], 0), (0, 0, 0, window[1]), 
              (window[0], 0, window[0], window[1]), (0, window[1], window[0], window[1])]
 
     center = alien.get_centroid()
     tolerance = alien.get_width() + granularity / math.sqrt(2)
-    for wall in walls:
-        # dist = min_dist_point_to_line(center, wall)
-        # if dist < tolerance or np.isclose(dist, tolerance): return False
-        # print("wall: " + str(wall))
-        touch = does_alien_touch_wall(alien, [wall], granularity)
-        # print(wall, touch)
-        # if touch: print()
-        # print("window: " + str(dist))
-
     
-    # return True
     return not does_alien_touch_wall(alien, walls, granularity)
 
 if __name__ == '__main__':
