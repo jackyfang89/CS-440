@@ -37,20 +37,12 @@ def one_level_empty_maze_ascii(window, granularity):
     return maze_ascii
 
 def char_to_add(index, alien, granularity, goals, walls, offset):
-    # print("config!")
     config = idxToConfig(index, offset, granularity, alien)
-    # print("config done!")
     alien.set_alien_config(config)
+
     if does_alien_touch_wall(alien, walls, granularity): return '%'
     elif does_alien_touch_goal(alien, goals):            return '.'
     else:                                                return ' '
-
-# def complete_empty_maze_ascii(window, granularity):
-#     maze_ascii = []
-#     for i in range(3):
-#         maze_ascii.append(one_level_empty_maze_ascii(window, granularity))
-#         maze_ascii.append(['#'])
-#     return maze_ascii
 
 import traceback
 
@@ -68,37 +60,29 @@ def transformToMaze(alien, goals, walls, window,granularity):
 
     """
 
-    print("hello")
-    # maze_ascii = complete_empty_maze_ascii(window, granularity)
-    # hori, ball, vert = one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity), one_level_empty_maze_ascii(window, granularity)
     row, col = int(window[1] / granularity) + 1, int(window[0] / granularity) + 1
     offset = [0, 0, 0]
 
     start_idx = configToIdx(alien.get_config(), offset, granularity, alien)
     maze_ascii = []
 
-    #build maze with either ' ', '.', or '%' 
-    for i in range(row):
+    #build maze with either ' ', '.', or '%'. remember that maze should be in maze[x][y][level]!
+    for x in range(col):
         curr_row = []
-        for j in range(col):
-            hori_char = char_to_add((i, j, 0), alien, granularity, goals, walls, offset)
-            vert_char = char_to_add((i, j, 1), alien, granularity, goals, walls, offset)
-            ball_char = char_to_add((i, j, 2), alien, granularity, goals, walls, offset)
+        for y in range(row):
+            hori_char = char_to_add((x, y, 0), alien, granularity, goals, walls, offset)
+            vert_char = char_to_add((x, y, 1), alien, granularity, goals, walls, offset)
+            ball_char = char_to_add((x, y, 2), alien, granularity, goals, walls, offset)
             
             cell = [hori_char, vert_char, ball_char] #each cell of maze_ascii is list of [a, b, c], where a = char at level 0, b is char at level 1...etc
             curr_row.append(cell) 
-        maze_ascii.append(curr_row)           
-            # maze_ascii.append(cell)
 
+        maze_ascii.append(curr_row)      
 
-    maze_ascii[start_idx[0]][start_idx[1]][0] = 'P' #set start
-
+    maze_ascii[start_idx[0]][start_idx[1]][start_idx[2]] = 'P' #set start
     maze = Maze(maze_ascii, alien, granularity)
-    # maze.saveToFile()
 
-    # print(traceback.format_exc())
     return maze
-    # pass
 
 if __name__ == '__main__':
     import configparser
@@ -167,5 +151,8 @@ if __name__ == '__main__':
     ### change these to speed up your testing early on! 
     granularities = [2,5,8,10]
     map_names = ['Test1','Test2','Test3','Test4','NoSolutionMap']
+
+    # granularities = [2]
+    # map_names = ['Test1', 'Test2']
     generate_test_mazes(granularities,map_names)
     compare_test_mazes_with_gt(granularities,map_names)
