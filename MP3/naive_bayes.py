@@ -101,6 +101,20 @@ def print_paramter_vals_bigram(unigram_laplace,bigram_laplace,bigram_lambda,pos_
     print(f"Bigram Lambda {bigram_lambda}")
     print(f"Positive prior {pos_prior}")
 
+def bigram_freqs(train_set, train_labels, doc_type):
+    freq = {}
+    n = 0
+    for i in range(len(train_set)):
+        if train_labels[i] == doc_type:
+            n += len(train_set[i]) - 1
+            for j in range(len(train_set[i]) - 1):
+                curr_key = (train_set[i][j], train_set[i][j + 1]) 
+                if freq.get(curr_key) == None:
+                    freq[curr_key] = 1
+                else:
+                    freq[curr_key] += 1
+    
+    return (freq, n)
 
 # main function for the bigrammixture model
 def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0009, bigram_laplace=0.00337, bigram_lambda=0.6785,pos_prior=0.8, silently=False):
