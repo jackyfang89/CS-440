@@ -79,15 +79,15 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.5,sile
     yhats = []
     for doc in tqdm(dev_set,disable=silently):
         #calculate odds for pos and neg of curr doc
-        prob_pos, prob_neg = 0, 0
+        prob_pos, prob_neg = math.log(pos_prior), math.log(1 - pos_prior)
         for word in doc:
             curr_odds_pos, curr_odds_neg = 0, 0
-            if freqs_pos[word] == None: #not found in positive
+            if freqs_pos.get(word) == None: #not found in positive
                 curr_odds_pos = laplace / (len(doc) + laplace * (unique_count_pos + 1))
             else:
                 curr_odds_pos = (freqs_pos[word] + laplace) / (len(doc) + laplace * (unique_count_pos + 1))
             
-            if freqs_neg[word] == None: #not found in positive
+            if freqs_neg.get(word) == None: #not found in positive
                 curr_odds_neg = laplace / (len(doc) + laplace * (unique_count_neg + 1))
             else:
                 curr_odds_neg = (freqs_neg[word] + laplace) / (len(doc) + laplace * (unique_count_neg + 1))
