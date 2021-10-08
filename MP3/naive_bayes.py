@@ -77,6 +77,7 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,sile
 
     #development phase: calc P(Type = p|Words) and P(Type = n|Words) for EACH REVIEW
     yhats = []
+    i = 0
     for doc in tqdm(dev_set,disable=silently):
         #calculate odds for pos and neg of curr doc
         prob_pos, prob_neg = math.log(pos_prior), math.log(1 - pos_prior)
@@ -92,11 +93,22 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,sile
             else:
                 curr_odds_neg = (freqs_neg[word] + laplace) / (len(doc) + laplace * (unique_count_neg + 1))
 
+            if i > 1000 and i < 1050:
+                print(curr_odds_pos, curr_odds_neg)
+
             prob_pos += math.log(curr_odds_pos)
             prob_neg += math.log(curr_odds_neg)
 
+        #convert back since odds are currently log'd
+        prob_pos = math.pow(math.e, prob_pos)
+        prob_neg = math.pow(math.e, prob_neg)
+
+        # if i > 1000 and i < 1050:
+        #     print(prob_pos, prob_neg)
+
         if prob_pos >= prob_neg: yhats.append(1)
         else                   : yhats.append(0)
+        i += 1
 
     return yhats
 
