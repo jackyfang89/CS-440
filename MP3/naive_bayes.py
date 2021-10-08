@@ -25,7 +25,7 @@ files and classes when code is run, so be careful to not modify anything else.
        we haven't passed in specific values for these parameters.
 """
  
-def load_data(trainingdir, testdir, stemming=False, lowercase=False, silently=False):
+def load_data(trainingdir, testdir, stemming=False, lowercase=True, silently=False):
     print(f"Stemming is {stemming}")
     print(f"Lowercase is {lowercase}")
     train_set, train_labels, dev_set, dev_labels = reader.load_dataset(trainingdir,testdir,stemming,lowercase,silently)
@@ -44,7 +44,7 @@ You can modify the default values for the Laplace smoothing parameter and the pr
 Notice that we may pass in specific values for these parameters during our testing.
 """
 
-def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,silently=False):
+def naiveBayes(train_set, train_labels, dev_set, laplace=0.0015, pos_prior=0.8,silently=False):
     # Keep this in the provided template
     print_paramter_vals(laplace,pos_prior)
 
@@ -53,7 +53,7 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,sile
 
     #populate frequency dicts and count uniques for pos & neg
     unique_count_pos, unique_count_neg = 0, 0   #count of unique words for pos and neg train sets
-    len_pos, len_neg = 0, 0
+    len_pos, len_neg = 0, 0                     #num of seen words in pos & neg sets
     freqs_pos, freqs_neg = {}, {}               #dicts to store frequencies of words in pos & neg train sets
 
     #training phase
@@ -61,7 +61,7 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,sile
         curr_set   = train_set[i]
         curr_label = train_labels[i]
 
-        if (curr_label == 0): #negative
+        if curr_label == 0: #negative
             len_neg += len(curr_set)
             for word in curr_set:
                 if freqs_neg.get(word) == None:
@@ -80,38 +80,31 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,sile
 
     #development phase: calc P(Type = p|Words) and P(Type = n|Words) for EACH REVIEW
     yhats = []
-    i = 0
+
     for doc in tqdm(dev_set,disable=silently):
         #calculate odds for pos and neg of curr doc
         prob_pos, prob_neg = math.log(pos_prior), math.log(1 - pos_prior)
         for word in doc:
             curr_odds_pos, curr_odds_neg = 0, 0
             if freqs_pos.get(word) == None: #not found in positive
-                curr_odds_pos = laplace / (len(doc) + laplace * (len_pos + 1))
+                curr_odds_pos = laplace / (len_pos + laplace * (unique_count_pos + 1))
             else:
-                curr_odds_pos = (freqs_pos[word] + laplace) / (len(doc) + laplace * (len_pos + 1))
+                curr_odds_pos = (freqs_pos[word] + laplace) / (len_pos + laplace * (unique_count_pos + 1))
             
             if freqs_neg.get(word) == None: #not found in positive
-                curr_odds_neg = laplace / (len(doc) + laplace * (len_neg + 1))
+                curr_odds_neg = laplace / (len_neg + laplace * (unique_count_neg + 1))
             else:
-                curr_odds_neg = (freqs_neg[word] + laplace) / (len(doc) + laplace * (len_neg + 1))
-
-            # if i > 1000 and i < 1050:
-            #     print(curr_odds_pos, curr_odds_neg)
+                curr_odds_neg = (freqs_neg[word] + laplace) / (len_neg + laplace * (unique_count_neg + 1))
 
             prob_pos += math.log(curr_odds_pos)
             prob_neg += math.log(curr_odds_neg)
 
         #convert back since odds are currently log'd
-        prob_pos = math.pow(math.e, prob_pos)
-        prob_neg = math.pow(math.e, prob_neg)
-
-        # if i > 1000 and i < 1050:
-        #     print(prob_pos, prob_neg)
+        # prob_pos = math.pow(math.e, prob_pos)
+        # prob_neg = math.pow(math.e, prob_neg)
 
         if prob_pos >= prob_neg: yhats.append(1)
         else                   : yhats.append(0)
-        i += 1
 
     return yhats
 
