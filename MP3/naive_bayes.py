@@ -53,6 +53,7 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,sile
 
     #populate frequency dicts and count uniques for pos & neg
     unique_count_pos, unique_count_neg = 0, 0   #count of unique words for pos and neg train sets
+    len_pos, len_neg = 0, 0
     freqs_pos, freqs_neg = {}, {}               #dicts to store frequencies of words in pos & neg train sets
 
     #training phase
@@ -61,6 +62,7 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,sile
         curr_label = train_labels[i]
 
         if (curr_label == 0): #negative
+            len_neg += len(curr_set)
             for word in curr_set:
                 if freqs_neg.get(word) == None:
                     freqs_neg[word] = 1
@@ -68,6 +70,7 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,sile
                 else:
                     freqs_neg[word] += 1
         else:
+            len_pos += len(curr_set)
             for word in curr_set:
                 if freqs_pos.get(word) == None:
                     freqs_pos[word] = 1
@@ -84,17 +87,17 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,sile
         for word in doc:
             curr_odds_pos, curr_odds_neg = 0, 0
             if freqs_pos.get(word) == None: #not found in positive
-                curr_odds_pos = laplace / (len(doc) + laplace * (unique_count_pos + 1))
+                curr_odds_pos = laplace / (len(doc) + laplace * (len_pos + 1))
             else:
-                curr_odds_pos = (freqs_pos[word] + laplace) / (len(doc) + laplace * (unique_count_pos + 1))
+                curr_odds_pos = (freqs_pos[word] + laplace) / (len(doc) + laplace * (len_pos + 1))
             
             if freqs_neg.get(word) == None: #not found in positive
-                curr_odds_neg = laplace / (len(doc) + laplace * (unique_count_neg + 1))
+                curr_odds_neg = laplace / (len(doc) + laplace * (len_neg + 1))
             else:
-                curr_odds_neg = (freqs_neg[word] + laplace) / (len(doc) + laplace * (unique_count_neg + 1))
+                curr_odds_neg = (freqs_neg[word] + laplace) / (len(doc) + laplace * (len_neg + 1))
 
-            if i > 1000 and i < 1050:
-                print(curr_odds_pos, curr_odds_neg)
+            # if i > 1000 and i < 1050:
+            #     print(curr_odds_pos, curr_odds_neg)
 
             prob_pos += math.log(curr_odds_pos)
             prob_neg += math.log(curr_odds_neg)
