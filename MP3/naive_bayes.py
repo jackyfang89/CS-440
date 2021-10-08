@@ -44,7 +44,7 @@ You can modify the default values for the Laplace smoothing parameter and the pr
 Notice that we may pass in specific values for these parameters during our testing.
 """
 
-def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.5,silently=False):
+def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.8,silently=False):
     # Keep this in the provided template
     print_paramter_vals(laplace,pos_prior)
 
@@ -91,6 +91,9 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.5,sile
                 curr_odds_neg = laplace / (len(doc) + laplace * (unique_count_neg + 1))
             else:
                 curr_odds_neg = (freqs_neg[word] + laplace) / (len(doc) + laplace * (unique_count_neg + 1))
+
+            prob_pos += math.log(curr_odds_pos)
+            prob_neg += math.log(curr_odds_neg)
 
         if prob_pos >= prob_neg: yhats.append(1)
         else                   : yhats.append(0)
