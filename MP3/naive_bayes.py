@@ -48,6 +48,43 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.5,sile
     # Keep this in the provided template
     print_paramter_vals(laplace,pos_prior)
 
+    #0 is negative, 1 is positive
+    #remember to use log and sums instead of products
+
+    #build dict of words and frequencies
+    #also track # of unique words
+
+    unique_count_pos, unique_count_neg = 0, 0   #count of unique words for pos and neg train sets
+    freqs_pos, freqs_neg = {}, {}               #dicts to store frequencies of words in pos & neg train sets
+
+    #populate frequency dicts and count uniques for pos & neg
+
+    for i in range(len(train_set)):
+        curr_set   = train_set[i]
+        curr_label = train_labels[i]
+
+        curr_freqs = {}, curr_unique_count = 0
+        if curr_label == 0: 
+            curr_freqs = freqs_neg
+            curr_unique_count = unique_count_neg
+        else:               
+            curr_freqs = freqs_pos
+            curr_unique_count = unique_count_pos
+
+        #process
+        for word in curr_set:
+            if curr_freqs.get(word) == None:
+                curr_freqs[word] = 1
+                curr_unique_count += 1
+            else:
+                curr_freqs[word] += 1
+        
+        
+
+
+
+
+
     yhats = []
     for doc in tqdm(dev_set,disable=silently):
         yhats.append(-1)
