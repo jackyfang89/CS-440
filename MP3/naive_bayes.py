@@ -25,7 +25,7 @@ files and classes when code is run, so be careful to not modify anything else.
        we haven't passed in specific values for these parameters.
 """
  
-def load_data(trainingdir, testdir, stemming=False, lowercase=True, silently=False):
+def load_data(trainingdir, testdir, stemming=False, lowercase=False, silently=False):
     print(f"Stemming is {stemming}")
     print(f"Lowercase is {lowercase}")
     train_set, train_labels, dev_set, dev_labels = reader.load_dataset(trainingdir,testdir,stemming,lowercase,silently)
@@ -38,9 +38,21 @@ def print_paramter_vals(laplace,pos_prior):
     print(f"Unigram Laplace {laplace}")
     print(f"Positive prior {pos_prior}")
 
-#returns two lists of the probabilities of each doc being pos / being neg
+#returns a dict with the frequency of all words given type
+def naive_bayes_freqs(train_set, train_labels, doc_type):
+    freq = {}
+    for i in range(len(train_set)):
+        if train_labels[i] == doc_type:
+            for word in train_set[i]:
+                if freq.get(word) == None:
+                    freq[word] = 1
+                else:
+                    freq[word] += 1
+    
+    return freq
 
-def naive_bayes_probs(train_set, train_labels, dev_set, laplace=0.0015, pos_prior=0.8,silently=False):
+#returns two lists of the probabilities of each doc being pos / being neg
+de#returns two lists of the probabilities of each doc being pos / being negf naive_bayes_probs(train_set, train_labels, dev_set, laplace=0.0015, pos_prior=0.8,silently=False):
     # Keep this in the provided template
     # print_paramter_vals(laplace,pos_prior)
 
@@ -118,7 +130,7 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=0.0015, pos_prior=0.8,s
     i = 0
     for doc in tqdm(dev_set,disable=silently):
         if pos_probs[i] >= neg_probs[i]: yhats.append(1)
-        else:                         yhats.append(0)
+        else:                            yhats.append(0)
         i += 1
 
     return yhats
