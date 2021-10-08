@@ -41,18 +41,46 @@ def print_paramter_vals(laplace,pos_prior):
 #returns a dict with the frequency of all words given type
 def naive_bayes_freqs(train_set, train_labels, doc_type):
     freq = {}
+    n = 0       #number of words given type
     for i in range(len(train_set)):
         if train_labels[i] == doc_type:
+            n += len(train_set[i])
             for word in train_set[i]:
                 if freq.get(word) == None:
                     freq[word] = 1
                 else:
                     freq[word] += 1
     
-    return freq
+    return (freq, n)
+
+def determine_type(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior, silently=False):
+    ans = []
+    for doc in tqdm(dev_set,disable=silently):
+        pos_prob, neg_prob = math.log(pos_prior), math.log(1 - pos_prior)
+        for word in doc:
+            curr_pos, curr_neg = 0, 0
+            if pos_freqs.get(word) == None:
+                curr_pos = laplace / (pos_n + laplace * (len(pos_freqs) + 1))
+            else:
+                curr_pos = (pos_freqs[word] + laplace) / (pos_n + laplace * (len(pos_freqs) + 1))
+            
+            if neg_freqs.get(word) == None:
+                curr_neg = laplace / (neg_n + laplace * (len(neg_freqs) + 1))
+            else:
+                curr_neg = (neg_freqs[word] + laplace) / (neg_n + laplace * (len(neg_freqs) + 1))
+
+            pos_prob += math.log(curr_pos)
+            neg_prob += math.log(curr_neg)
+
+        if pos_prob >= neg_prob: ans.append(1)
+        else                   : ans.append(0)
+
+    return ans
+
+
 
 #returns two lists of the probabilities of each doc being pos / being neg
-de#returns two lists of the probabilities of each doc being pos / being negf naive_bayes_probs(train_set, train_labels, dev_set, laplace=0.0015, pos_prior=0.8,silently=False):
+def naive_bayes_probs(train_set, train_labels, dev_set, laplace=0.0015, pos_prior=0.8,silently=False):
     # Keep this in the provided template
     # print_paramter_vals(laplace,pos_prior)
 
