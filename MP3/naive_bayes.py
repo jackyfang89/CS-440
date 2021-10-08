@@ -133,7 +133,7 @@ def print_paramter_vals_bigram(unigram_laplace,bigram_laplace,bigram_lambda,pos_
 
 
 # main function for the bigrammixture model
-def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0015, bigram_laplace=1.0, bigram_lambda=1.0,pos_prior=0.8, silently=False):
+def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0009, bigram_laplace=0.00337, bigram_lambda=0.6785,pos_prior=0.8, silently=False):
 
     # Keep this in the provided template
     print_paramter_vals_bigram(unigram_laplace,bigram_laplace,bigram_lambda,pos_prior)
@@ -163,7 +163,7 @@ def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0015, bigram
                     freqs_neg[curr_key] += 1
         else:
             len_pos += len(curr_set) - 1
-            for word in curr_set:
+            for j in range(len(curr_set) - 1):
                 curr_key = (curr_set[j], curr_set[j + 1])
                 if freqs_pos.get(curr_key) == None:
                     freqs_pos[curr_key] = 1
@@ -186,12 +186,12 @@ def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0015, bigram
             if freqs_pos.get(curr_key) == None: #not found in positive
                 curr_odds_pos = bigram_laplace / (len_pos + bigram_laplace * (unique_count_pos + 1))
             else:
-                curr_odds_pos = (freqs_pos[word] + bigram_laplace) / (len_pos + bigram_laplace * (unique_count_pos + 1))
+                curr_odds_pos = (freqs_pos[curr_key] + bigram_laplace) / (len_pos + bigram_laplace * (unique_count_pos + 1))
             
             if freqs_neg.get(curr_key) == None: #not found in positive
                 curr_odds_neg = bigram_laplace / (len_neg + bigram_laplace * (unique_count_neg + 1))
             else:
-                curr_odds_neg = (freqs_neg[word] + bigram_laplace) / (len_neg + bigram_laplace * (unique_count_neg + 1))
+                curr_odds_neg = (freqs_neg[curr_key] + bigram_laplace) / (len_neg + bigram_laplace * (unique_count_neg + 1))
             
             prob_pos += math.log(curr_odds_pos)
             prob_neg += math.log(curr_odds_neg)
