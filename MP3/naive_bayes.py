@@ -133,7 +133,7 @@ def print_paramter_vals_bigram(unigram_laplace,bigram_laplace,bigram_lambda,pos_
 
 
 # main function for the bigrammixture model
-def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=1.0, bigram_laplace=1.0, bigram_lambda=1.0,pos_prior=0.5, silently=False):
+def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0015, bigram_laplace=1.0, bigram_lambda=1.0,pos_prior=0.8, silently=False):
 
     # Keep this in the provided template
     print_paramter_vals_bigram(unigram_laplace,bigram_laplace,bigram_lambda,pos_prior)
@@ -171,33 +171,39 @@ def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=1.0, bigram_la
                 else:
                     freqs_pos[curr_key] += 1
 
+    naive_probs = naive_bayes_probs(train_set, train_labels, dev_set, unigram_laplace, pos_prior, silently)
+    naive_pos_probs, naive_neg_probs = naive_probs[0], naive_probs[1]
+
     #development phase: calc P(Type = p|Words) and P(Type = n|Words) for EACH REVIEW
     yhats = []
-
+    i = 0
     for doc in tqdm(dev_set,disable=silently):
         #calculate odds for pos and neg of curr doc
         prob_pos, prob_neg = math.log(pos_prior), math.log(1 - pos_prior)
-        for word in doc:
+        for j in range(len(doc) - 1): #every pair of words in curr doc
+            curr_key = (doc[j], doc[j + 1])
             curr_odds_pos, curr_odds_neg = 0, 0
-            if freqs_pos.get(word) == None: #not found in positive
-                curr_odds_pos = laplace / (len_pos + laplace * (unique_count_pos + 1))
+            if freqs_pos.get(curr_key) == None: #not found in positive
+                curr_odds_pos = bigram_laplace / (len_pos + bigram_laplace * (unique_count_pos + 1))
             else:
-                curr_odds_pos = (freqs_pos[word] + laplace) / (len_pos + laplace * (unique_count_pos + 1))
+                curr_odds_pos = (freqs_pos[word] + bigram_laplace) / (len_pos + bigram_laplace * (unique_count_pos + 1))
             
-            if freqs_neg.get(word) == None: #not found in positive
-                curr_odds_neg = laplace / (len_neg + laplace * (unique_count_neg + 1))
+            if freqs_neg.get(curr_key) == None: #not found in positive
+                curr_odds_neg = bigram_laplace / (len_neg + bigram_laplace * (unique_count_neg + 1))
             else:
-                curr_odds_neg = (freqs_neg[word] + laplace) / (len_neg + laplace * (unique_count_neg + 1))
-
+                curr_odds_neg = (freqs_neg[word] + bigram_laplace) / (len_neg + bigram_laplace * (unique_count_neg + 1))
+            
             prob_pos += math.log(curr_odds_pos)
             prob_neg += math.log(curr_odds_neg)
+        
+        #combine with naive_bayes
+        combined_prob_pos = (1 - bigram_lambda) * naive_pos_probs[i] + bigram_lambda * prob_pos
+        combined_prob_neg = (1 - bigram_lambda) * naive_neg_probs[i] + bigram_lambda * prob_neg
 
-        #convert back since odds are currently log'd
-        # prob_pos = math.pow(math.e, prob_pos)
-        # prob_neg = math.pow(math.e, prob_neg)
+        if combined_prob_pos >= combined_prob_neg: yhats.append(1)
+        else                                     : yhats.append(0) 
 
-        if prob_pos >= prob_neg: yhats.append(1)
-        else                   : yhats.append(0)
+        i += 1
 
     return yhats
 
