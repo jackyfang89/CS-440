@@ -51,43 +51,50 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=1.0, pos_prior=0.5,sile
     #0 is negative, 1 is positive
     #remember to use log and sums instead of products
 
-    #build dict of words and frequencies
-    #also track # of unique words
-
+    #populate frequency dicts and count uniques for pos & neg
     unique_count_pos, unique_count_neg = 0, 0   #count of unique words for pos and neg train sets
     freqs_pos, freqs_neg = {}, {}               #dicts to store frequencies of words in pos & neg train sets
 
-    #populate frequency dicts and count uniques for pos & neg
-
+    #training phase
     for i in range(len(train_set)):
         curr_set   = train_set[i]
         curr_label = train_labels[i]
 
-        curr_freqs = {}, curr_unique_count = 0
-        if curr_label == 0: 
-            curr_freqs = freqs_neg
-            curr_unique_count = unique_count_neg
-        else:               
-            curr_freqs = freqs_pos
-            curr_unique_count = unique_count_pos
+        if (curr_label == 0): #negative
+            for word in curr_set:
+                if freqs_neg.get(word) == None:
+                    freqs_neg[word] = 1
+                    unique_count_neg += 1
+                else:
+                    freqs_neg[word] += 1
+        else:
+            for word in curr_set:
+                if freqs_pos.get(word) == None:
+                    freqs_pos[word] = 1
+                    unique_count_pos += 1
+                else:
+                    freqs_pos[word] += 1
 
-        #process
-        for word in curr_set:
-            if curr_freqs.get(word) == None:
-                curr_freqs[word] = 1
-                curr_unique_count += 1
-            else:
-                curr_freqs[word] += 1
-        
-        
-
-
-
-
-
+    #development phase: calc P(Type = p|Words) and P(Type = n|Words) for EACH REVIEW
     yhats = []
     for doc in tqdm(dev_set,disable=silently):
-        yhats.append(-1)
+        #calculate odds for pos and neg of curr doc
+        prob_pos, prob_neg = 0, 0
+        for word in doc:
+            curr_odds_pos, curr_odds_neg = 0, 0
+            if freqs_pos[word] == None: #not found in positive
+                curr_odds_pos = laplace / (len(doc) + laplace * (unique_count_pos + 1))
+            else:
+                curr_odds_pos = (freqs_pos[word] + laplace) / (len(doc) + laplace * (unique_count_pos + 1))
+            
+            if freqs_neg[word] == None: #not found in positive
+                curr_odds_neg = laplace / (len(doc) + laplace * (unique_count_neg + 1))
+            else:
+                curr_odds_neg = (freqs_neg[word] + laplace) / (len(doc) + laplace * (unique_count_neg + 1))
+
+        if prob_pos >= prob_neg: yhats.append(1)
+        else                   : yhats.append(0)
+
     return yhats
 
 
