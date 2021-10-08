@@ -32,7 +32,6 @@ def load_data(trainingdir, testdir, stemming=False, lowercase=False, silently=Fa
     return train_set, train_labels, dev_set, dev_labels
 
 
-
 # Keep this in the provided template
 def print_paramter_vals(laplace,pos_prior):
     print(f"Unigram Laplace {laplace}")
@@ -53,9 +52,9 @@ def naive_bayes_freqs(train_set, train_labels, doc_type):
     
     return (freq, n)
 
-def determine_type(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior, silently=False):
-    ans = []
-    for doc in tqdm(dev_set,disable=silently):
+def naive_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior, silently=False):
+    pos_probs, neg_probs = [], []
+    for doc in dev_set:
         pos_prob, neg_prob = math.log(pos_prior), math.log(1 - pos_prior)
         for word in doc:
             curr_pos, curr_neg = 0, 0
@@ -72,10 +71,10 @@ def determine_type(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_pri
             pos_prob += math.log(curr_pos)
             neg_prob += math.log(curr_neg)
 
-        if pos_prob >= neg_prob: ans.append(1)
-        else                   : ans.append(0)
+        pos_probs.append(pos_prob)
+        neg_probs.append(neg_prob)
 
-    return ans
+    return (neg_probs, pos_probs)
 
 """
 You can modify the default values for the Laplace smoothing parameter and the prior for the positive label.
@@ -92,7 +91,18 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=0.0015, pos_prior=0.8,s
     pos_freqs, pos_n = pos_data[0], pos_data[1]
     neg_freqs, neg_n = neg_data[0], neg_data[1]
 
-    return determine_type(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior, silently)
+    probs = naive_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior, silently)
+
+    ans = []
+    for i in tqdm(range(len(dev_set)),disable=silently):
+        if probs[0][i] >= probs[1][i]:
+            ans.append(0)
+        else:
+            ans.append(1)
+
+    return ans
+
+
 
 # Keep this in the provided template
 def print_paramter_vals_bigram(unigram_laplace,bigram_laplace,bigram_lambda,pos_prior):
@@ -117,77 +127,77 @@ def bigram_freqs(train_set, train_labels, doc_type):
     return (freq, n)
 
 # main function for the bigrammixture model
-def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0009, bigram_laplace=0.00337, bigram_lambda=0.6785,pos_prior=0.8, silently=False):
+# def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0009, bigram_laplace=0.00337, bigram_lambda=0.6785,pos_prior=0.8, silently=False):
 
-    # Keep this in the provided template
-    print_paramter_vals_bigram(unigram_laplace,bigram_laplace,bigram_lambda,pos_prior)
+#     # Keep this in the provided template
+#     print_paramter_vals_bigram(unigram_laplace,bigram_laplace,bigram_lambda,pos_prior)
 
-    #0 is negative, 1 is positive
-    #remember to use log and sums instead of products
+#     #0 is negative, 1 is positive
+#     #remember to use log and sums instead of products
 
-    #populate frequency dicts and count uniques for pos & neg
-    #keys to dict are now tuples of words (word1, word2)
-    unique_count_pos, unique_count_neg = 0, 0   #count of unique words for pos and neg train sets
-    len_pos, len_neg = 0, 0                     #num of seen words in pos & neg sets
-    freqs_pos, freqs_neg = {}, {}               #dicts to store frequencies of words in pos & neg train sets
+#     #populate frequency dicts and count uniques for pos & neg
+#     #keys to dict are now tuples of words (word1, word2)
+#     unique_count_pos, unique_count_neg = 0, 0   #count of unique words for pos and neg train sets
+#     len_pos, len_neg = 0, 0                     #num of seen words in pos & neg sets
+#     freqs_pos, freqs_neg = {}, {}               #dicts to store frequencies of words in pos & neg train sets
 
-    #training phase
-    for i in range(len(train_set)): 
-        curr_set   = train_set[i]
-        curr_label = train_labels[i]
+#     #training phase
+#     for i in range(len(train_set)): 
+#         curr_set   = train_set[i]
+#         curr_label = train_labels[i]
 
-        if curr_label == 0: #negative
-            len_neg += len(curr_set) - 1
-            for j in range(len(curr_set) - 1):               #look at consecutive pairs of words
-                curr_key = (curr_set[j], curr_set[j + 1])
-                if freqs_neg.get(curr_key) == None:
-                    freqs_neg[curr_key] = 1
-                    unique_count_neg += 1
-                else:
-                    freqs_neg[curr_key] += 1
-        else:
-            len_pos += len(curr_set) - 1
-            for j in range(len(curr_set) - 1):
-                curr_key = (curr_set[j], curr_set[j + 1])
-                if freqs_pos.get(curr_key) == None:
-                    freqs_pos[curr_key] = 1
-                    unique_count_pos += 1
-                else:
-                    freqs_pos[curr_key] += 1
+#         if curr_label == 0: #negative
+#             len_neg += len(curr_set) - 1
+#             for j in range(len(curr_set) - 1):               #look at consecutive pairs of words
+#                 curr_key = (curr_set[j], curr_set[j + 1])
+#                 if freqs_neg.get(curr_key) == None:
+#                     freqs_neg[curr_key] = 1
+#                     unique_count_neg += 1
+#                 else:
+#                     freqs_neg[curr_key] += 1
+#         else:
+#             len_pos += len(curr_set) - 1
+#             for j in range(len(curr_set) - 1):
+#                 curr_key = (curr_set[j], curr_set[j + 1])
+#                 if freqs_pos.get(curr_key) == None:
+#                     freqs_pos[curr_key] = 1
+#                     unique_count_pos += 1
+#                 else:
+#                     freqs_pos[curr_key] += 1
 
-    naive_probs = naive_bayes_probs(train_set, train_labels, dev_set, unigram_laplace, pos_prior, silently)
-    naive_pos_probs, naive_neg_probs = naive_probs[0], naive_probs[1]
+#     naive_probs = naive_bayes_probs(train_set, train_labels, dev_set, unigram_laplace, pos_prior, silently)
+#     naive_pos_probs, naive_neg_probs = naive_probs[0], naive_probs[1]
 
-    #development phase: calc P(Type = p|Words) and P(Type = n|Words) for EACH REVIEW
-    yhats = []
-    i = 0
-    for doc in tqdm(dev_set,disable=silently):
-        #calculate odds for pos and neg of curr doc
-        prob_pos, prob_neg = math.log(pos_prior), math.log(1 - pos_prior)
-        for j in range(len(doc) - 1): #every pair of words in curr doc
-            curr_key = (doc[j], doc[j + 1])
-            curr_odds_pos, curr_odds_neg = 0, 0
-            if freqs_pos.get(curr_key) == None: #not found in positive
-                curr_odds_pos = bigram_laplace / (len_pos + bigram_laplace * (unique_count_pos + 1))
-            else:
-                curr_odds_pos = (freqs_pos[curr_key] + bigram_laplace) / (len_pos + bigram_laplace * (unique_count_pos + 1))
+#     #development phase: calc P(Type = p|Words) and P(Type = n|Words) for EACH REVIEW
+#     yhats = []
+#     i = 0
+#     for doc in tqdm(dev_set,disable=silently):
+#         #calculate odds for pos and neg of curr doc
+#         prob_pos, prob_neg = math.log(pos_prior), math.log(1 - pos_prior)
+#         for j in range(len(doc) - 1): #every pair of words in curr doc
+#             curr_key = (doc[j], doc[j + 1])
+#             curr_odds_pos, curr_odds_neg = 0, 0
+#             if freqs_pos.get(curr_key) == None: #not found in positive
+#                 curr_odds_pos = bigram_laplace / (len_pos + bigram_laplace * (unique_count_pos + 1))
+#             else:
+#                 curr_odds_pos = (freqs_pos[curr_key] + bigram_laplace) / (len_pos + bigram_laplace * (unique_count_pos + 1))
             
-            if freqs_neg.get(curr_key) == None: #not found in positive
-                curr_odds_neg = bigram_laplace / (len_neg + bigram_laplace * (unique_count_neg + 1))
-            else:
-                curr_odds_neg = (freqs_neg[curr_key] + bigram_laplace) / (len_neg + bigram_laplace * (unique_count_neg + 1))
+#             if freqs_neg.get(curr_key) == None: #not found in positive
+#                 curr_odds_neg = bigram_laplace / (len_neg + bigram_laplace * (unique_count_neg + 1))
+#             else:
+#                 curr_odds_neg = (freqs_neg[curr_key] + bigram_laplace) / (len_neg + bigram_laplace * (unique_count_neg + 1))
             
-            prob_pos += math.log(curr_odds_pos)
-            prob_neg += math.log(curr_odds_neg)
+#             prob_pos += math.log(curr_odds_pos)
+#             prob_neg += math.log(curr_odds_neg)
         
-        #combine with naive_bayes
-        combined_prob_pos = (1 - bigram_lambda) * naive_pos_probs[i] + bigram_lambda * prob_pos
-        combined_prob_neg = (1 - bigram_lambda) * naive_neg_probs[i] + bigram_lambda * prob_neg
+#         #combine with naive_bayes
+#         combined_prob_pos = (1 - bigram_lambda) * naive_pos_probs[i] + bigram_lambda * prob_pos
+#         combined_prob_neg = (1 - bigram_lambda) * naive_neg_probs[i] + bigram_lambda * prob_neg
 
-        if combined_prob_pos >= combined_prob_neg: yhats.append(1)
-        else                                     : yhats.append(0) 
+#         if combined_prob_pos >= combined_prob_neg: yhats.append(1)
+#         else                                     : yhats.append(0) 
 
-        i += 1
+#         i += 1
 
-    return yhats
+#     return yhats
 
