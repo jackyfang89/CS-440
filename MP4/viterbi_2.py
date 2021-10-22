@@ -3,6 +3,7 @@ Part 3: Here you should improve viterbi to use better laplace smoothing for unse
 This should do better than baseline and your first implementation of viterbi, especially on unseen words
 """
 
+import math
 def viterbi_2(train, test):
     '''
     input:  training data (list of sentences, with tags on the words)
@@ -18,9 +19,13 @@ def viterbi_2(train, test):
     #transition: key = prev tag, value = dict, key = tag, value = freq
     emission_n, transition_n = {}, {} #key: tag, value: # of words of the tag
     #emission: k = tag, v = dict --> dict: k = word, v = freq
-    #so P(wi | ti) = emission[tag][word] / 
+    #so P(wi | ti) = emission[tag][word] 
+
+    total_words = 0 #used for START & END for laplace smoothing
     for s in train: 
         for i in range(len(s)):
+            total_words += 1
+
             word, tag = s[i][0], s[i][1]
             if emission_n.get(tag, None) == None: #total counts in emission for each tag
                 emission_n[tag] = 1
@@ -55,31 +60,26 @@ def viterbi_2(train, test):
 
     #extract hapax from emission
     tags = list(emission_n.keys())
-    hapax, hapax_n = {}, {}
-
+    hapax = {}
+    hapax_n = 0
+    #prob of a hapax word given a tag = hapax[tag] / hapax_n
     for tag in tags:
+        # print(tag)
         for word in emission[tag]:
             if emission[tag][word] != 1: continue 
 
             if hapax.get(tag, None) == None:
-                hapax[tag] = {word} #set of words that occur only once for each tag
+                hapax[tag] = 1
             else:
-                hapax[tag].add(word)
+                hapax[tag] += 1
             
-            if hapax_n.get(tag, None) == None:
-                hapax_n[tag] = 1
-            else:
-                hapax_n[tag] += 1
-    
-    for tag in hapax:
-        print(hapax[tag])
+            hapax_n += 1
 
     #decoding
     ans = []
-    e_alpha = 0.001  #smoothing constant for emission
+    e_alpha = 0.01  #smoothing constant for emission
     # s_alpha = 1.0   #smoothing constant for start
-    t_alpha = 0.0001 #smoothing constant for transition
-    
+    t_alpha = 0.001 #smoothing constant for transition
 
     for s in test:
         v, b = [], []
@@ -89,25 +89,29 @@ def viterbi_2(train, test):
             word = s[k]
 
             for tagB in tags:  
-                # tag = tags[tB]
                 #values for emission smoothing
-                e_V = len(emission[tagB].keys())
-                e_denom = emission_n[tagB] + e_alpha * (e_V + 1)
+                scaled_e_alpha = len(s) / total_words #only 1 start/end for each document
+                if hapax.get(tagB, None) != None: #tag = START or END, never in hapax
+                    scaled_e_alpha = e_alpha * (hapax[tagB] / hapax_n)
 
+                e_V = len(emission[tagB].keys())
+                e_denom = emission_n[tagB] + scaled_e_alpha * (e_V + 1)
+                
                 if k == 0:
                     #start
                     if emission[tagB].get('START', None) == None:
-                        curr_v = math.log(e_alpha / e_denom)
+                        curr_v = math.log(scaled_e_alpha / e_denom)
                     else:
-                        curr_v = math.log((e_alpha + emission[tagB]['START']) / e_denom)
+                        curr_v = math.log((scaled_e_alpha + emission[tagB]['START']) / e_denom)
                         
                     if emission[tagB].get(word, None) == None: #smoothing for emission
-                        curr_v += math.log(e_alpha / e_denom)
+                        curr_v += math.log(scaled_e_alpha / e_denom)
                     else:
-                        curr_v += math.log((e_alpha + emission[tagB][word]) / e_denom)
+                        curr_v += math.log((scaled_e_alpha + emission[tagB][word]) / e_denom)
 
                     v_curr.append(curr_v)
                     b_curr.append(-1)
+                    
                 else:
                     max_v, best_t = float('-inf'), 0
                     #emission probs don't depend on tagA
@@ -130,26 +134,15 @@ def viterbi_2(train, test):
                             best_t = tA
 
                     if emission[tagB].get(word, None) == None:
-                        max_v += math.log(e_alpha / e_denom)
+                        max_v += math.log(scaled_e_alpha / e_denom)
                     else:
-                        max_v += math.log((e_alpha + emission[tagB][word]) / e_denom)
+                        max_v += math.log((scaled_e_alpha + emission[tagB][word]) / e_denom)
 
                     v_curr.append(max_v)
                     b_curr.append(best_t)
 
             v.append(v_curr)
             b.append(b_curr)
-        
-        # if s == test[0]:
-        #     print(emission_n.keys())
-        #     for i in range(len(b)):
-        #         for j in range(len(b[i])):
-        #             print(b[i][j], end = ", ")
-        #         print()
-        #     for i in range(len(b)):
-        #         for j in range(len(b[i])):
-        #             print(v[i][j], end = ", ")
-        #         print()
 
         #find best one in last row
         best_idx, best_odds = 0, v[len(s) - 1][0]
@@ -170,10 +163,5 @@ def viterbi_2(train, test):
         curr_ans = []
         for i in range(len(s)):
             curr_ans.append((s[i], curr_s_tags[i]))
-        
-        if s == test[0]:
-            print("curr_ans: " + str(curr_ans))
-            print("s: " + str(s))
-
         ans.append(curr_ans)
     return ans

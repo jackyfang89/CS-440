@@ -154,9 +154,9 @@ def viterbi_1(train, test):
         for i in range(len(s)):
             curr_ans.append((s[i], curr_s_tags[i]))
         
-        if s == test[0]:
-            print("curr_ans: " + str(curr_ans))
-            print("s: " + str(s))
+        # if s == test[0]:
+        #     print("curr_ans: " + str(curr_ans))
+        #     print("s: " + str(s))
 
         ans.append(curr_ans)
     return ans
