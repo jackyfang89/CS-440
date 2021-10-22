@@ -55,25 +55,45 @@ def viterbi_1(train, test):
 
     #decoding
     ans = []
+    e_alpha = 1.0   #smoothing constant for emission
+    s_alpha = 1.0   #smoothing constant for start
     for s in test:
         v, b = [], []
         curr_ans = []
         for k in range(len(s)):
-            tags = list(start.keys())
+            tags = list(emission_n.keys())
             v_curr, b_curr = [], []
             word = s[k][0]
 
             max_v, best_t = 0, tags[0]
             for tB in range(len(tags)):  
                 tag = tags[tB]
+                #values for emission smoothing
+                e_V, s_V = len(emission[tag].keys()), len(start.keys())
+                e_denom, s_denom = emission_n[tag] + e_alpha * (e_V + 1), len(s) + s_alpha * (s_V + 1)
+
                 if k == 0:
-                    v_curr.append(math.log(start[tag]) + math.log(emission[tag][word]))
+                    curr_v = 0
+                    if start.get(tag, None) == None:
+                        curr_v = math.log(s_alpha / s_denom)
+                    else:
+                        curr_v = math.log((s_alpha + start[tag])  / s_denom) #each sentence has one starting word
+                        
+                    if emission[tag].get(word, None) == None: #smoothing for emission
+                        curr_v += math.log(e_alpha / e_denom)
+                    else:
+                        curr_v += math.log((e_alpha + emission[tag][word]) / e_denom)
+
+                    v_curr.append(curr_v)
                     b_curr.append(tag)
                 else:
                     for tA in range(len(tags)):
                         curr_v  = math.log(v[k - 1][tA]) 
                         curr_v += math.log(transition[(tag, tags[tA])])
-                        curr_v += math.log(emission[tag][word])
+                        if emission[tag].get(word, None) == None:
+                            curr_v += math.log(alpha / denom)
+                        else:
+                            curr_v += math.log((alpha + emission[tag][word]) / denom)
 
                         if curr_v > max_v:
                             max_v = curr_v
