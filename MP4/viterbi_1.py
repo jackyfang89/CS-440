@@ -60,15 +60,9 @@ def viterbi_1(train, test):
     ans = []
     e_alpha = 0.001  #smoothing constant for emission
     # s_alpha = 1.0   #smoothing constant for start
-    t_alpha = 0.001 #smoothing constant for transition
+    t_alpha = 0.0001 #smoothing constant for transition
 
     tags = list(emission_n.keys())
-
-    # for tag in tags:
-    #     if emission[tag].get('plainfield', None) == None:
-    #         print("None")
-    #     else:
-    #         print(emission[tag]['plainfield'])
 
     for s in test:
         v, b = [], []
@@ -129,16 +123,16 @@ def viterbi_1(train, test):
             v.append(v_curr)
             b.append(b_curr)
         
-        if s == test[0]:
-            print(emission_n.keys())
-            for i in range(len(b)):
-                for j in range(len(b[i])):
-                    print(b[i][j], end = ", ")
-                print()
-            for i in range(len(b)):
-                for j in range(len(b[i])):
-                    print(v[i][j], end = ", ")
-                print()
+        # if s == test[0]:
+        #     print(emission_n.keys())
+        #     for i in range(len(b)):
+        #         for j in range(len(b[i])):
+        #             print(b[i][j], end = ", ")
+        #         print()
+        #     for i in range(len(b)):
+        #         for j in range(len(b[i])):
+        #             print(v[i][j], end = ", ")
+        #         print()
 
         #find best one in last row
         best_idx, best_odds = 0, v[len(s) - 1][0]
