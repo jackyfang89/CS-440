@@ -57,6 +57,8 @@ def viterbi_1(train, test):
     ans = []
     e_alpha = 1.0   #smoothing constant for emission
     s_alpha = 1.0   #smoothing constant for start
+    t_alpha = 1.0   #smoothing constant for transition
+
     for s in test:
         v, b = [], []
         curr_ans = []
@@ -65,7 +67,7 @@ def viterbi_1(train, test):
             v_curr, b_curr = [], []
             word = s[k][0]
 
-            max_v, best_t = 0, tags[0]
+            max_v, best_t = 0, 0
             for tB in range(len(tags)):  
                 tag = tags[tB]
                 #values for emission smoothing
@@ -77,7 +79,7 @@ def viterbi_1(train, test):
                     if start.get(tag, None) == None:
                         curr_v = math.log(s_alpha / s_denom)
                     else:
-                        curr_v = math.log((s_alpha + start[tag])  / s_denom) #each sentence has one starting word
+                        curr_v = math.log((s_alpha + start[tag]) / s_denom) #each sentence has one starting word
                         
                     if emission[tag].get(word, None) == None: #smoothing for emission
                         curr_v += math.log(e_alpha / e_denom)
@@ -87,17 +89,25 @@ def viterbi_1(train, test):
                     v_curr.append(curr_v)
                     b_curr.append(tag)
                 else:
+                    t_V = len(transition.keys())
+                    t_denom = len(s) - 1 + t_alpha * (t_V + 1) #total num of transitions is len(s) - 1
+
                     for tA in range(len(tags)):
-                        curr_v  = math.log(v[k - 1][tA]) 
-                        curr_v += math.log(transition[(tag, tags[tA])])
-                        if emission[tag].get(word, None) == None:
-                            curr_v += math.log(alpha / denom)
+                        curr_v  = v[k - 1][tA]
+
+                        if transition.get((tag, tags[tA]), None) == None:
+                            curr_v += math.log(t_alpha / t_denom)
                         else:
-                            curr_v += math.log((alpha + emission[tag][word]) / denom)
+                            curr_v += math.log(transition[(tag, tags[tA])] / t_denom)
+
+                        if emission[tag].get(word, None) == None:
+                            curr_v += math.log(e_alpha / e_denom)
+                        else:
+                            curr_v += math.log((e_alpha + emission[tag][word]) / e_denom)
 
                         if curr_v > max_v:
                             max_v = curr_v
-                            best_t = tags[tB]
+                            best_t = tB
 
                     v_curr.append(max_v)
                     b_curr.append(best_t)
@@ -113,13 +123,16 @@ def viterbi_1(train, test):
                 best_idx  = t
         
         #backtrack 
+        tags = list(emission_n.keys())
         curr_idx = best_idx
-        curr_s_tags = [tags[best_idx]]
-        for i in range(len(s) - 2, -1, -1):
-            curr_s_tags.insert(0, tags[curr_idx])
+        curr_s_tags = []
+        for i in range(len(s) - 2, -2, -1):
+            curr_s_tags.append(tags[curr_idx])
             curr_idx = b[i][curr_idx]
+
+        curr_s_tags.reverse()
         
-        for i in range(curr_s_tags):
+        for i in range(len(s)):
             curr_ans.append((s[i][0], curr_s_tags[i]))
         
         ans.append(curr_ans)
