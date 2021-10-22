@@ -55,7 +55,7 @@ def naive_bayes_freqs(train_set, train_labels, doc_type):
 def naive_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior):
     pos_probs, neg_probs = [], []
     for doc in dev_set:
-        pos_prob, neg_prob = math.log(pos_prior), math.log(1 - pos_prior)
+        pos_prob, neg_prob = math.log10(pos_prior), math.log10(1 - pos_prior)
         for word in doc:
             curr_pos, curr_neg = 0, 0
             if pos_freqs.get(word) == None:
@@ -68,8 +68,8 @@ def naive_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior)
             else:
                 curr_neg = (neg_freqs[word] + laplace) / (neg_n + laplace * (len(neg_freqs) + 1))
 
-            pos_prob += math.log(curr_pos)
-            neg_prob += math.log(curr_neg)
+            pos_prob += math.log10(curr_pos)
+            neg_prob += math.log10(curr_neg)
 
         pos_probs.append(pos_prob)
         neg_probs.append(neg_prob)
@@ -91,11 +91,11 @@ def naiveBayes(train_set, train_labels, dev_set, laplace=0.0015, pos_prior=0.8, 
     pos_freqs, pos_n = pos_data[0], pos_data[1]
     neg_freqs, neg_n = neg_data[0], neg_data[1]
 
-    probs = naive_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior, silently)
+    probs = naive_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior)
 
     ans = []
     for i in tqdm(range(len(dev_set)),disable=silently):
-        if probs[0][i] >= probs[1][i]:
+        if probs[0][i] > probs[1][i]:
             ans.append(0)
         else:
             ans.append(1)
@@ -128,7 +128,7 @@ def bigram_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior
     pos_probs, neg_probs = [], []
 
     for doc in dev_set:
-        pos_prob, neg_prob = math.log(pos_prior), math.log(1 - pos_prior)
+        pos_prob, neg_prob = math.log10(pos_prior), math.log10(1 - pos_prior)
         for i in range(len(doc) - 1):
             curr_pos, curr_neg = 0, 0
             curr_key = (doc[i], doc[i + 1])
@@ -142,16 +142,16 @@ def bigram_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, laplace, pos_prior
             else:
                 curr_neg = (neg_freqs[curr_key] + laplace) / (neg_n + laplace * (len(neg_freqs) + 1))
 
-            pos_prob += math.log(curr_pos)
-            neg_prob += math.log(curr_neg)
+            pos_prob += math.log10(curr_pos)
+            neg_prob += math.log10(curr_neg)
 
         pos_probs.append(pos_prob)
         neg_probs.append(neg_prob)
 
-    return (pos_probs, neg_probs)
+    return (neg_probs, pos_probs)
 
 # main function for the bigrammixture model
-def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0009, bigram_laplace=0.00337, bigram_lambda=0.6785,pos_prior=0.8, silently=False):
+def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.038, bigram_laplace=0.0015, bigram_lambda=0.418, pos_prior=0.8, silently=False):
     # Keep this in the provided template
     print_paramter_vals_bigram(unigram_laplace,bigram_laplace,bigram_lambda,pos_prior)
     
@@ -161,7 +161,24 @@ def bigramBayes(train_set, train_labels, dev_set, unigram_laplace=0.0009, bigram
     pos_freqs, pos_n = pos_data[0], pos_data[1]
     neg_freqs, neg_n = neg_data[0], neg_data[1]
 
-    unigram_probs = naive_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, unigram_laplace, pos_prior, silently)
+    uni_probs = naive_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, unigram_laplace, pos_prior)
 
-    
+    pos_data = bigram_freqs(train_set, train_labels, 1)
+    neg_data = bigram_freqs(train_set, train_labels, 0)
 
+    pos_freqs, pos_n = pos_data[0], pos_data[1]
+    neg_freqs, neg_n = neg_data[0], neg_data[1]
+
+    bi_probs = bigram_probs(pos_freqs, neg_freqs, pos_n, neg_n, dev_set, bigram_laplace, pos_prior)
+
+    ans = []
+    for i in tqdm(range(len(dev_set)),disable=silently):
+        pos_prob = (1 - bigram_lambda) * uni_probs[1][i] + bigram_lambda * bi_probs[1][i]
+        neg_prob = (1 - bigram_lambda) * uni_probs[0][i] + bigram_lambda * bi_probs[0][i]
+
+        if pos_prob > neg_prob: 
+            ans.append(1)
+        else:
+            ans.append(0)
+            
+    return ans
