@@ -22,8 +22,16 @@ def viterbi_1(train, test):
     #emission: k = tag, v = dict --> dict: k = word, v = freq
     #so P(wi | ti) = emission[tag][word] / 
     for s in train: 
+        start = True
         for pair in s:
             word, tag = pair[0], pair[1]
+            if start == True:
+                if start.get(tag, None) == None:
+                    start[tag] = 1
+                else:
+                    start[tag] += 1
+                start = False
+
             if emission_n.get(tag, None) == None:
                 emission_n[tag] = 1
             else:
