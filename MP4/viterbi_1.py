@@ -31,7 +31,6 @@ def viterbi_1(train, test):
                     start[tag] = 1
                 else:
                     start[tag] += 1
-                start = False
 
             if emission_n.get(tag, None) == None: #emission
                 emission_n[tag] = 1
@@ -39,9 +38,13 @@ def viterbi_1(train, test):
                 emission_n[tag] += 1
             tag_dict = emission.get(tag, None)
             if tag_dict == None:
-                tag_dict[tag] = {word: 1}
+                temp = {word: 1}
+                emission[tag] = temp
             else:
-                tag_dict[tag] += 1
+                if tag_dict.get(word, None) == None:
+                    tag_dict[word] = 1
+                else:
+                    tag_dict[word] += 1
 
             if i == 0: continue #skip transition for first one
             prev_tag = s[i - 1][1] 
@@ -54,12 +57,13 @@ def viterbi_1(train, test):
     ans = []
     for s in test:
         v, b = [], []
+        curr_ans = []
         for k in range(len(s)):
             tags = list(start.keys())
             v_curr, b_curr = [], []
             word = s[k][0]
 
-            max_v = 0, best_t = tags[0]
+            max_v, best_t = 0, tags[0]
             for tB in range(len(tags)):  
                 tag = tags[tB]
                 if k == 0:
@@ -82,14 +86,21 @@ def viterbi_1(train, test):
             b.append(b_curr)
         
         #find best one in last row
-        best_idx = 0, best_odds = v[len(s) - 1][0]
+        best_idx, best_odds = 0, v[len(s) - 1][0]
         for t in range(1, len(tags)):
             if v[len(s) - 1][t] > best_odds:
                 best_odds = v[len(s) - 1][t]
                 best_idx  = t
-
-        best_end_tag = tags[best_idx]
+        
         #backtrack 
+        curr_idx = best_idx
+        curr_s_tags = [tags[best_idx]]
+        for i in range(len(s) - 2, -1, -1):
+            curr_s_tags.insert(0, tags[curr_idx])
+            curr_idx = b[i][curr_idx]
         
+        for i in range(curr_s_tags):
+            curr_ans.append((s[i][0], curr_s_tags[i]))
         
+        ans.append(curr_ans)
     return ans
