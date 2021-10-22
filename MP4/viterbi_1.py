@@ -58,9 +58,9 @@ def viterbi_1(train, test):
 
     #decoding
     ans = []
-    e_alpha = 1.0   #smoothing constant for emission
+    e_alpha = 0.001  #smoothing constant for emission
     # s_alpha = 1.0   #smoothing constant for start
-    t_alpha = 1.0   #smoothing constant for transition
+    t_alpha = 0.001 #smoothing constant for transition
 
     tags = list(emission_n.keys())
 
@@ -85,7 +85,6 @@ def viterbi_1(train, test):
 
                 if k == 0:
                     #start
-                    curr_v = 0
                     if emission[tagB].get('START', None) == None:
                         curr_v = math.log(e_alpha / e_denom)
                     else:
@@ -100,6 +99,7 @@ def viterbi_1(train, test):
                     b_curr.append(-1)
                 else:
                     max_v, best_t = float('-inf'), 0
+                    #emission probs don't depend on tagA
 
                     for tA in range(len(tags)):
                         tagA = tags[tA]
@@ -114,14 +114,14 @@ def viterbi_1(train, test):
                             else:
                                 curr_v += math.log((t_alpha + transition[tagA][tagB]) / t_denom)
 
-                        if emission[tagB].get(word, None) == None:
-                            curr_v += math.log(e_alpha / e_denom)
-                        else:
-                            curr_v += math.log((e_alpha + emission[tagB][word]) / e_denom)
-
                         if curr_v > max_v:
                             max_v = curr_v
                             best_t = tA
+
+                    if emission[tagB].get(word, None) == None:
+                        max_v += math.log(e_alpha / e_denom)
+                    else:
+                        max_v += math.log((e_alpha + emission[tagB][word]) / e_denom)
 
                     v_curr.append(max_v)
                     b_curr.append(best_t)
@@ -146,13 +146,9 @@ def viterbi_1(train, test):
             if v[len(s) - 1][t] > best_odds:
                 best_odds = v[len(s) - 1][t]
                 best_idx  = t
-        # if s == test[0]:
-        #     print("best_idx: " + str(best_idx))
-        #backtrack 
+
         curr_idx = best_idx
         curr_s_tags = [tags[curr_idx]]
-        # if s == test[0]:
-        #     print("tags best_idx: " + str(tags[curr_idx]))
 
         for i in range(len(s) - 1, 0, -1):
             curr_idx = b[i][curr_idx]
