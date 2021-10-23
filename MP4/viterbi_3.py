@@ -6,11 +6,11 @@ with enhancements such as dealing with suffixes/prefixes separately
 
 #takes a word and guesses a suitable tag
 def tag_guesser(word, curr_tag):
-    if word.endswith('ing'):
+    if word.endswith('ing'): #good
         return 'VERB'
-    # elif word.endswith('ly') and hapax.get('ADV', None) != None:
-    #     return 'ADV'
-    # elif word.startswith('$') and hapax.get('NOUN', None) != None:
+    elif word.endswith('ly'): #good
+        return 'ADV'
+    # elif word.startswith('$'): bad for some reason
     #     return 'NOUN'
     else:
         return curr_tag
