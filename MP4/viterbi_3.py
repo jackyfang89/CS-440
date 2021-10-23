@@ -5,11 +5,15 @@ with enhancements such as dealing with suffixes/prefixes separately
 
 
 #takes a word and guesses a suitable tag
-def tag_guesser(word):
+def tag_guesser(word, curr_tag):
     if word.endswith('ing'):
         return 'VERB'
-    elif word.endswith('ly'):
-        return 'ADV'
+    # elif word.endswith('ly') and hapax.get('ADV', None) != None:
+    #     return 'ADV'
+    # elif word.startswith('$') and hapax.get('NOUN', None) != None:
+    #     return 'NOUN'
+    else:
+        return curr_tag
 
 import math
 def viterbi_3(train, test):
@@ -70,25 +74,30 @@ def viterbi_3(train, test):
     hapax = {}
     hapax_n = 0
     #prob of a hapax word given a tag = hapax[tag] / hapax_n
-    print(tags)
+    # print(tags)
 
+    f = open("hapax_dump.txt", "w") #dump hapax values
     for tag in tags:
         for word in emission[tag]:
             if emission[tag][word] != 1: continue 
 
-            # new_tag = 
             if hapax.get(tag, None) == None:
                 hapax[tag] = 1
             else:
                 hapax[tag] += 1
-            
+
+            f.write(str(word) + "=" + str(tag) + "\n")
             hapax_n += 1
+
+    f.close()
+    print("hapax dump complete")
 
     #decoding
     ans = []
     e_alpha = 0.01  #smoothing constant for emission
     # s_alpha = 1.0   #smoothing constant for start
     t_alpha = 0.001 #smoothing constant for transition
+    h_alpha = 0.00001 #smoothing for hapax
 
     for s in test:
         v, b = [], []
@@ -99,6 +108,7 @@ def viterbi_3(train, test):
 
             for tagB in tags:  
                 #values for emission smoothing
+                #only 1 start/end for each document
                 scaled_e_alpha = len(s) / total_words #only 1 start/end for each document
                 if hapax.get(tagB, None) != None: #tag = START or END, never in hapax
                     scaled_e_alpha = e_alpha * (hapax[tagB] / hapax_n)
@@ -114,6 +124,11 @@ def viterbi_3(train, test):
                         curr_v = math.log((scaled_e_alpha + emission[tagB]['START']) / e_denom)
                         
                     if emission[tagB].get(word, None) == None: #smoothing for emission
+                        guessed_tag = tag_guesser(word, tagB)
+                        if hapax.get(guessed_tag, None) == None:
+                            scaled_e_alpha *= h_alpha
+                        else:
+                            scaled_e_alpha *= (hapax[guessed_tag] / hapax_n)
                         curr_v += math.log(scaled_e_alpha / e_denom)
                     else:
                         curr_v += math.log((scaled_e_alpha + emission[tagB][word]) / e_denom)
@@ -142,7 +157,12 @@ def viterbi_3(train, test):
                             max_v = curr_v
                             best_t = tA
 
-                    if emission[tagB].get(word, None) == None:
+                    if emission[tagB].get(word, None) == None: #unseen word given the tag
+                        guessed_tag = tag_guesser(word, tagB)
+                        if hapax.get(guessed_tag, None) == None:
+                            scaled_e_alpha *= h_alpha
+                        else:
+                            scaled_e_alpha *= (hapax[guessed_tag] / hapax_n)
                         max_v += math.log(scaled_e_alpha / e_denom)
                     else:
                         max_v += math.log((scaled_e_alpha + emission[tagB][word]) / e_denom)

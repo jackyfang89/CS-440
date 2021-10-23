@@ -75,6 +75,11 @@ def viterbi_2(train, test):
             
             hapax_n += 1
 
+    # for tag in hapax:
+    #     print(str(tag) + ": " + str(hapax[tag]))
+    
+    # print(hapax_n)
+
     #decoding
     ans = []
     e_alpha = 0.01  #smoothing constant for emission
