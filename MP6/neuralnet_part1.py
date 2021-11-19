@@ -54,6 +54,8 @@ class NeuralNet(nn.Module):
         self.relu = nn.ReLU()
         self.fc1 = nn.Linear(self.in_size, self.hidden_size)
         self.fc2 = nn.Linear(self.hidden_size, self.out_size)
+        self.criterion = nn.CrossEntropyLoss()
+        self.optimizer = optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
 
         # raise NotImplementedError("You need to write this part!")
     
@@ -80,8 +82,15 @@ class NeuralNet(nn.Module):
         @param y: an (N,) Tensor
         @return L: total empirical risk (mean of losses) for this batch as a float (scalar)
         """
-        raise NotImplementedError("You need to write this part!")
-        return 0.0
+
+        self.optimizer.zero_grad()
+        output = self.forward(x)
+        loss = self.criterion(output, y)
+        loss.backward()
+        self.optimizer.step()
+
+        # raise NotImplementedError("You need to write this part!")
+        # return 0.0
 
 
 
