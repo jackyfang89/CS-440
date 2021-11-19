@@ -46,8 +46,16 @@ class NeuralNet(nn.Module):
 
         """
         super(NeuralNet, self).__init__()
+        self.lrate = lrate
         self.loss_fn = loss_fn
-        raise NotImplementedError("You need to write this part!")
+        self.in_size = in_size
+        self.out_size = out_size
+        self.hidden_size = 32
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(self.in_size, self.hidden_size)
+        self.fc2 = nn.Linear(self.hidden_size, self.out_size)
+
+        # raise NotImplementedError("You need to write this part!")
     
 
     def forward(self, x):
