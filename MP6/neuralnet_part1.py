@@ -64,8 +64,13 @@ class NeuralNet(nn.Module):
         @param x: an (N, in_size) Tensor
         @return y: an (N, out_size) Tensor of output from the network
         """
-        raise NotImplementedError("You need to write this part!")
-        return torch.ones(x.shape[0], 1)
+        
+        output = self.fc1(x)
+        output = self.relue(output)
+        output = self.fc2(output)
+        # raise NotImplementedError("You need to write this part!")
+        # return torch.ones(x.shape[0], 1)
+        return output
 
     def step(self, x,y):
         """
