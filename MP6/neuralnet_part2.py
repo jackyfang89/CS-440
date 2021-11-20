@@ -139,7 +139,7 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
     train_generator = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=False)
 
     #NN training
-    net = NeuralNet(0.005, nn.CrossEntropyLoss(), 3, 4)
+    net = NeuralNet(0.003, nn.CrossEntropyLoss(), 3, 4)
     # print(len(train_set[0]))
 
     losses, yhats = [], []
