@@ -52,18 +52,14 @@ class NeuralNet(nn.Module):
         self.out_size = out_size
         self.hidden_size = 100
 
-        self.seq1 = nn.Sequential( #ELU best activ. 
-            nn.Conv2d(self.in_size, 20, 3),
-            nn.ELU(),
-            nn.Conv2d(20, 10, 3), 
-            nn.ELU()
-        )
-        
-        self.seq2 = nn.Sequential(
-            nn.Linear(7840, 20), #25088 = 10 * 28 * 28
-            nn.ELU(),
-            nn.Linear(20, self.out_size)
-        )
+
+        #following based on pytorch.org's "Training a Classifier" page
+        self.conv1 = nn.Conv2d(self.in_size, 60, 3)
+        self.pool = nn.MaxPool2d(2, 3)
+        self.conv2 = nn.Conv2d(60, 30, 2)
+        self.fc1 = nn.Linear(30 * 3 * 3, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, self.out_size)
 
         self.optimizer = optim.SGD(self.parameters(), lr=lrate, momentum=0.9)
     
@@ -75,14 +71,17 @@ class NeuralNet(nn.Module):
         @return y: an (N, out_size) Tensor of output from the network
         """
         #resize x
-        # print(x.size())
         # print(x.shape[0])
         x = x.view(torch.numel(x) // 3072, 3, 32, 32)
-        x = self.seq1(x)
-        # print(x.size())
-        x = torch.flatten(x, 1) #turn back into vector of N by 100 * 32 * 28 * 28 = 100 * 25088
-        # print(x.size())
-        x = self.seq2(x)
+
+        #following based on pytorch.org's "Training a Classifier" page
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = torch.flatten(x, 1) # flatten all dimensions except batch
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        
         return x
 
     def step(self, x, y):
@@ -130,8 +129,8 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
     train_set = torch.div(train_set, std)
 
     #standardize output
-    mean = torch.mean(dev_set)
-    std = torch.std(dev_set, False)
+    # mean = torch.mean(dev_set)
+    # std = torch.std(dev_set, False)
     dev_set = torch.sub(dev_set, mean)
     dev_set = torch.div(dev_set, std)
 
@@ -140,7 +139,7 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
     train_generator = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=False)
 
     #NN training
-    net = NeuralNet(0.001, nn.CrossEntropyLoss(), 3, 4)
+    net = NeuralNet(0.005, nn.CrossEntropyLoss(), 3, 4)
     # print(len(train_set[0]))
 
     losses, yhats = [], []
@@ -155,7 +154,6 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
     # #use NN to generate tags
     for pic in dev_set:
         output = net.forward(pic)
-        # print(output)
         yhats.append(torch.argmax(output))
     
     # raise NotImplementedError("You need to write this part!")
