@@ -5,14 +5,37 @@ with enhancements such as dealing with suffixes/prefixes separately
 
 
 #takes a word and guesses a suitable tag
+#ING LY ED 74%
+import re
 def tag_guesser(word, curr_tag):
-    if word.endswith('ing'): #good
+    # if word.startswith("$"): #bad
+    #     return 'NOUN'
+    # if word.endswith("\'s"): #bad
+    #     return 'NOUN'
+    if word.endswith("ing"): #good
         return 'VERB'
-    elif word.endswith('ly'): #good
+    # elif word.endswith("ion"):
+    #     return 'NOUN'
+    elif word.endswith("ly"): #good
         return 'ADV'
-    # elif word.startswith('$'): bad for some reason
+    elif word.endswith("ed"): #good 
+        return 'VERB'
+    elif all(char in '0123456789-,' for char in word): #no diff xd
+        return 'NUM'
+    elif re.match(r".*-.*ed$", word) != None: #no diff lol
+        return 'ADJ'
+    # elif word.endswith("%"): #bad
+    #     return 'NOUN'
+    # elif word.endswith("a"): #bad
+    #     return 'NOUN'
+    # elif word.endswith('s'): #bad
+    #     return 'NOUN'
+    # elif word.endswith("\'s"): #bad
+    #     return 'NOUN'
+    # elif word.startswith('$'): #bad 
     #     return 'NOUN'
     else:
+        # return 'NOUN' #terrible
         return curr_tag
 
 import math

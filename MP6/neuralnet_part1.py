@@ -51,9 +51,15 @@ class NeuralNet(nn.Module):
         self.in_size = in_size
         self.out_size = out_size
         self.hidden_size = 32
-        self.relu = nn.ReLU()
-        self.fc1 = nn.Linear(self.in_size, self.hidden_size)
-        self.fc2 = nn.Linear(self.hidden_size, self.out_size)
+
+        self.seq = nn.Sequential(
+            nn.Linear(self.in_size, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, self.out_size)
+        )
+        # self.relu = nn.ReLU()
+        # self.fc1 = nn.Linear(self.in_size, self.hidden_size)
+        # self.fc2 = nn.Linear(self.hidden_size, self.out_size)
         # self.criterion = nn.CrossEntropyLoss()
         self.optimizer = optim.SGD(self.parameters(), lr=lrate, momentum=0.9)
 
@@ -66,13 +72,8 @@ class NeuralNet(nn.Module):
         @param x: an (N, in_size) Tensor
         @return y: an (N, out_size) Tensor of output from the network
         """
-        
-        output = self.fc1(x)
-        output = self.relu(output)
-        output = self.fc2(output)
-        # raise NotImplementedError("You need to write this part!")
-        # return torch.ones(x.shape[0], 1)
-        return output
+
+        return self.seq(x)
 
     def step(self, x, y):
         """
@@ -89,11 +90,7 @@ class NeuralNet(nn.Module):
         loss.backward()
         self.optimizer.step()
 
-        # return loss.item()
         return loss.detach().cpu().numpy()
-
-        # raise NotImplementedError("You need to write this part!")
-        # return 0.0
 
 
 def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
@@ -117,24 +114,25 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
     @return net: a NeuralNet object
     """
     #standardize input
+
     mean = torch.mean(train_set)
     std = torch.std(train_set, False)
-    torch.sub(train_set, mean)
-    torch.div(train_set, std)
+    train_set = torch.sub(train_set, mean)
+    train_set = torch.div(train_set, std)
 
     #create datasets
     train_dataset = get_dataset_from_arrays(train_set, train_labels)
-    train_generator = DataLoader(train_dataset, batch_size, False)
+    train_generator = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=False)
 
     #NN training
-    net = NeuralNet(0.01, nn.CrossEntropyLoss(), len(train_set[0]), 4)
+    net = NeuralNet(0.001, nn.CrossEntropyLoss(), len(train_set[0]), 4)
 
     losses, yhats = [], []
     for epoch in range(epochs):
         loss = 0
         for batch in train_generator:
-            temp = net.step(batch['features'], batch['labels'])
-            loss += temp
+            loss += net.step(batch['features'], batch['labels'])
+            # loss += temp
             
         losses.append(loss)
 
@@ -142,7 +140,10 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
     # #use NN to generate tags
     for pic in dev_set:
         output = net.forward(pic)
+        # print(output)
         yhats.append(torch.argmax(output))
-
+    
+    for x in losses:
+        print(x)
     # raise NotImplementedError("You need to write this part!")
     return losses, np.array(yhats).astype(int), net
