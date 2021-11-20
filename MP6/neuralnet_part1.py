@@ -43,8 +43,8 @@ class NeuralNet(nn.Module):
         in_size -> 32 ->  out_size
         
         We recommend setting lrate to 0.01 for part 1.
-
         """
+
         super(NeuralNet, self).__init__()
         self.lrate = lrate
         self.loss_fn = loss_fn
@@ -54,8 +54,8 @@ class NeuralNet(nn.Module):
         self.relu = nn.ReLU()
         self.fc1 = nn.Linear(self.in_size, self.hidden_size)
         self.fc2 = nn.Linear(self.hidden_size, self.out_size)
-        self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
+        # self.criterion = nn.CrossEntropyLoss()
+        self.optimizer = optim.SGD(self.parameters(), lr=lrate, momentum=0.9)
 
         # raise NotImplementedError("You need to write this part!")
     
@@ -68,13 +68,13 @@ class NeuralNet(nn.Module):
         """
         
         output = self.fc1(x)
-        output = self.relue(output)
+        output = self.relu(output)
         output = self.fc2(output)
         # raise NotImplementedError("You need to write this part!")
         # return torch.ones(x.shape[0], 1)
         return output
 
-    def step(self, x,y):
+    def step(self, x, y):
         """
         Performs one gradient step through a batch of data x with labels y.
 
@@ -85,13 +85,15 @@ class NeuralNet(nn.Module):
 
         self.optimizer.zero_grad()
         output = self.forward(x)
-        loss = self.criterion(output, y)
+        loss = self.loss_fn(output, y)
         loss.backward()
         self.optimizer.step()
 
+        # return loss.item()
+        return loss.detach().cpu().numpy()
+
         # raise NotImplementedError("You need to write this part!")
         # return 0.0
-
 
 
 def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
@@ -114,5 +116,33 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
     @return yhats: an (M,) NumPy array of binary labels for dev_set
     @return net: a NeuralNet object
     """
-    raise NotImplementedError("You need to write this part!")
-    return [],[],None
+    #standardize input
+    mean = torch.mean(train_set)
+    std = torch.std(train_set, False)
+    torch.sub(train_set, mean)
+    torch.div(train_set, std)
+
+    #create datasets
+    train_dataset = get_dataset_from_arrays(train_set, train_labels)
+    train_generator = DataLoader(train_dataset, batch_size, False)
+
+    #NN training
+    net = NeuralNet(0.01, nn.CrossEntropyLoss(), len(train_set[0]), 4)
+
+    losses, yhats = [], []
+    for epoch in range(epochs):
+        loss = 0
+        for batch in train_generator:
+            temp = net.step(batch['features'], batch['labels'])
+            loss += temp
+            
+        losses.append(loss)
+
+
+    # #use NN to generate tags
+    for pic in dev_set:
+        output = net.forward(pic)
+        yhats.append(torch.argmax(output))
+
+    # raise NotImplementedError("You need to write this part!")
+    return losses, np.array(yhats).astype(int), net
