@@ -50,20 +50,15 @@ class NeuralNet(nn.Module):
         self.loss_fn = loss_fn
         self.in_size = in_size
         self.out_size = out_size
-        self.hidden_size = 32
+        self.hidden_size = 100
 
         self.seq = nn.Sequential(
             nn.Linear(self.in_size, self.hidden_size),
             nn.ReLU(),
             nn.Linear(self.hidden_size, self.out_size)
         )
-        # self.relu = nn.ReLU()
-        # self.fc1 = nn.Linear(self.in_size, self.hidden_size)
-        # self.fc2 = nn.Linear(self.hidden_size, self.out_size)
-        # self.criterion = nn.CrossEntropyLoss()
+        
         self.optimizer = optim.SGD(self.parameters(), lr=lrate, momentum=0.9)
-
-        # raise NotImplementedError("You need to write this part!")
     
 
     def forward(self, x):
@@ -113,12 +108,17 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
     @return yhats: an (M,) NumPy array of binary labels for dev_set
     @return net: a NeuralNet object
     """
-    #standardize input
-
+    #standardize input 
     mean = torch.mean(train_set)
     std = torch.std(train_set, False)
     train_set = torch.sub(train_set, mean)
     train_set = torch.div(train_set, std)
+
+    #standardize output
+    mean = torch.mean(dev_set)
+    std = torch.std(dev_set, False)
+    dev_set = torch.sub(dev_set, mean)
+    dev_set = torch.div(dev_set, std)
 
     #create datasets
     train_dataset = get_dataset_from_arrays(train_set, train_labels)
@@ -132,7 +132,6 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
         loss = 0
         for batch in train_generator:
             loss += net.step(batch['features'], batch['labels'])
-            # loss += temp
             
         losses.append(loss)
 
@@ -143,7 +142,5 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
         # print(output)
         yhats.append(torch.argmax(output))
     
-    for x in losses:
-        print(x)
     # raise NotImplementedError("You need to write this part!")
     return losses, np.array(yhats).astype(int), net
