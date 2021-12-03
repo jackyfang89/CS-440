@@ -52,10 +52,30 @@ class Agent:
         s_prime = self.generate_state(environment)
 
         # TODO: write your function here
-        # print('hi')
-        self.Q[s_prime][1] = 23
+        if self.s == None and self.a == None: #t = 0
+            move = None
+            if s_prime[2] != 2: 
+                move = utils.RIGHT
+                environment[0] += 1
+            elif s_prime[2] != 1: 
+                move = utils.LEFT
+                environment[0] -= 1
+            elif s_prime[3] != 2: 
+                move = utils.DOWN
+                environment[1] += 1
+            else: #all other options checked
+                move = utils.UP 
+                environment[1] -= 1
 
-        print(self.Q[s_prime][1])
+            self.a = move
+            self.s = self.generate_state(environment)
+            return move
+        
+        
+
+        
+
+
 
 
         return None
