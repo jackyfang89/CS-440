@@ -52,7 +52,10 @@ class Agent:
         s_prime = self.generate_state(environment)
 
         # TODO: write your function here
-        
+        # print('hi')
+        self.Q[s_prime][1] = 23
+
+        print(self.Q[s_prime][1])
 
 
         return None
