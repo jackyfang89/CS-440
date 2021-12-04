@@ -49,36 +49,57 @@ class Agent:
         Tip: you need to discretize the environment to the state space defined on the webpage first
         (Note that [adjoining_wall_x=0, adjoining_wall_y=0] is also the case when snake runs out of the playable board)
         '''
+
+        # determine reward
+        reward = 0
+        if points > self.points: reward = 1
+        elif dead: reward = -1
+        else: reward = -0.1
+
+        # generate state @ time t + 1
         s_prime = self.generate_state(environment)
 
-        # TODO: write your function here
-        if self.s == None and self.a == None: #t = 0
-            move = None
-            if s_prime[2] != 2: 
-                move = utils.RIGHT
-                environment[0] += 1
-            elif s_prime[2] != 1: 
-                move = utils.LEFT
-                environment[0] -= 1
-            elif s_prime[3] != 2: 
-                move = utils.DOWN
-                environment[1] += 1
-            else: #all other options checked
-                move = utils.UP 
-                environment[1] -= 1
+        # find optimal move at t = 0
+        # if self.s == None and self.a == None: #t = 0
+        #     move = None
+        #     # print(s_prime)
+        #     if   s_prime[2] != 2: move = utils.RIGHT
+        #     elif s_prime[2] != 1: move = utils.LEFT
+        #     elif s_prime[3] != 2: move = utils.DOWN
+        #     else: move = utils.UP 
 
-            self.a = move
-            self.s = self.generate_state(environment)
-            return move
+        #     self.a = move
+        #     self.s = s_prime
+        #     self.points = points
+        #     return move
         
-        
+        # find optimal move, t != 0
+        moves = [utils.RIGHT, utils.LEFT, utils.DOWN, utils.UP] # priority order
+        best_move = None
+        max_f = float('-inf')
+        for move in moves:
+            curr_f = 0
+            if self.N[s_prime][move] < self.Ne: curr_f = 1
+            else: curr_f = self.Q[s_prime][move]
+            
+            if curr_f > max_f: 
+                max_f = curr_f
+                best_move = move
 
-        
+        if self._train and self.s != None and self.a != None: #update Q and N tables, N first
+            self.N[self.s][self.a] += 1
+            
+            #calc values needed for updating Q
+            alpha = self.C / (self.C + self.N[self.s][self.a])
+            best_next_Q = max(self.Q[s_prime][move] for move in moves) 
+            new_Q = self.Q[self.s][self.a] + alpha * (reward + self.gamma * best_next_Q - self.Q[self.s][self.a])
+            self.Q[self.s][self.a] = new_Q
 
+        self.s = s_prime
+        self.a = best_move
+        self.points = points
 
-
-
-        return None
+        return best_move
 
     def generate_state(self, environment):
         # TODO: Implement this helper function that generates a state given an environment 
