@@ -112,7 +112,7 @@ class Agent:
         for pos in environment[2]:
             snake_body_row, snake_body_col = self.pos_to_cell(pos[0], pos[1])
             if snake_head_col == snake_body_col:
-                if snake_head_row - 1 == snake_body_row : adjoining_body_top = 1
+                if snake_head_row - 1 == snake_body_row: adjoining_body_top = 1
                 if snake_head_row + 1 == snake_body_row: adjoining_body_bottom = 1
 
             if snake_body_row == snake_body_row:
