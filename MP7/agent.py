@@ -65,7 +65,7 @@ class Agent:
         max_f = float('-inf')
         for move in moves:
             curr_f = 0
-            if self.N[s_prime][move] < self.Ne: curr_f = 1
+            if self._train and self.N[s_prime][move] < self.Ne: curr_f = 1
             else: curr_f = self.Q[s_prime][move]
             
             if curr_f > max_f: 
@@ -77,7 +77,7 @@ class Agent:
             
             #calc values needed for updating Q
             alpha = self.C / (self.C + self.N[self.s][self.a])
-            best_next_Q = max(self.Q[s_prime][move] for move in moves) 
+            best_next_Q = max(self.Q[s_prime]) 
             new_Q = self.Q[self.s][self.a] + alpha * (reward + self.gamma * best_next_Q - self.Q[self.s][self.a])
             self.Q[self.s][self.a] = new_Q
 
@@ -85,10 +85,11 @@ class Agent:
         self.a = best_move
         self.points = points
 
+        if dead: self.reset()
+
         return best_move
 
     def generate_state(self, environment):
-        # TODO: Implement this helper function that generates a state given an environment 
         food_dir_x = 0
         if   environment[3] < environment[0]: food_dir_x = 1
         elif environment[3] > environment[0]: food_dir_x = 2
@@ -97,34 +98,22 @@ class Agent:
         if   environment[4] < environment[1]: food_dir_y = 1
         elif environment[4] > environment[1]: food_dir_y = 2
 
-        num_grids = utils.DISPLAY_SIZE / utils.GRID_SIZE
-
         adjoining_wall_x = 0
-        snake_head_row, snake_head_col = self.pos_to_cell(environment[0], environment[1])
-        if   snake_head_col - 1 == 0: adjoining_wall_x = 1
-        elif snake_head_col + 1 == num_grids - 1: adjoining_wall_x = 2
+        if environment[0] - utils.GRID_SIZE == 0: adjoining_wall_x = 1
+        elif environment[0] == utils.DISPLAY_SIZE - utils.GRID_SIZE - utils.WALL_SIZE: adjoining_wall_x = 2
 
         adjoining_wall_y = 0
-        if   snake_head_row - 1 == 0: adjoining_wall_y = 1
-        elif snake_head_row + 1 == num_grids - 1: adjoining_wall_y = 2
+        if environment[1] - utils.GRID_SIZE == 0: adjoining_wall_y = 1
+        elif environment[1] == utils.DISPLAY_SIZE - utils.GRID_SIZE - utils.WALL_SIZE: adjoining_wall_y = 2
 
         adjoining_body_top, adjoining_body_bottom, adjoining_body_left, adjoining_body_right = 0, 0, 0, 0
         for pos in environment[2]:
-            snake_body_row, snake_body_col = self.pos_to_cell(pos[0], pos[1])
-            if snake_head_col == snake_body_col:
-                if snake_head_row - 1 == snake_body_row: adjoining_body_top = 1
-                if snake_head_row + 1 == snake_body_row: adjoining_body_bottom = 1
-
-            if snake_body_row == snake_body_row:
-                if snake_head_col - 1 == snake_body_col: adjoining_body_left = 1
-                if snake_head_col + 1 == snake_body_col: adjoining_body_right = 1
-
+            if environment[0] == pos[0]: #snake x same as body x
+                if environment[1] - utils.GRID_SIZE == pos[1]: adjoining_body_top = 1
+                if environment[1] + utils.GRID_SIZE == pos[1]: adjoining_body_bottom = 1
+            if environment[1] == pos[1]:
+                if environment[0] - utils.GRID_SIZE == pos[0]: adjoining_body_left = 1
+                if environment[0] + utils.GRID_SIZE == pos[0]: adjoining_body_right = 1
         
         return (food_dir_x, food_dir_y, adjoining_wall_x, adjoining_wall_y, 
             adjoining_body_top, adjoining_body_bottom, adjoining_body_left, adjoining_body_right)
-
-    def pos_to_cell(self, x, y):
-        col = x / utils.GRID_SIZE
-        row = y / utils.GRID_SIZE
-
-        return (row, col)
