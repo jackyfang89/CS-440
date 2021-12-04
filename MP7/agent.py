@@ -58,20 +58,6 @@ class Agent:
 
         # generate state @ time t + 1
         s_prime = self.generate_state(environment)
-
-        # find optimal move at t = 0
-        # if self.s == None and self.a == None: #t = 0
-        #     move = None
-        #     # print(s_prime)
-        #     if   s_prime[2] != 2: move = utils.RIGHT
-        #     elif s_prime[2] != 1: move = utils.LEFT
-        #     elif s_prime[3] != 2: move = utils.DOWN
-        #     else: move = utils.UP 
-
-        #     self.a = move
-        #     self.s = s_prime
-        #     self.points = points
-        #     return move
         
         # find optimal move, t != 0
         moves = [utils.RIGHT, utils.LEFT, utils.DOWN, utils.UP] # priority order
@@ -111,8 +97,9 @@ class Agent:
         if   environment[4] < environment[1]: food_dir_y = 1
         elif environment[4] > environment[1]: food_dir_y = 2
 
-        adjoining_wall_x = 0
         num_grids = utils.DISPLAY_SIZE / utils.GRID_SIZE
+
+        adjoining_wall_x = 0
         snake_head_row, snake_head_col = self.pos_to_cell(environment[0], environment[1])
         if   snake_head_col - 1 == 0: adjoining_wall_x = 1
         elif snake_head_col + 1 == num_grids - 1: adjoining_wall_x = 2
@@ -124,10 +111,13 @@ class Agent:
         adjoining_body_top, adjoining_body_bottom, adjoining_body_left, adjoining_body_right = 0, 0, 0, 0
         for pos in environment[2]:
             snake_body_row, snake_body_col = self.pos_to_cell(pos[0], pos[1])
-            if snake_head_row - 1 == snake_body_row: adjoining_body_top = 1
-            if snake_head_row + 1 == snake_body_row: adjoining_body_bottom = 1
-            if snake_head_col - 1 == snake_body_col: adjoining_body_left = 1
-            if snake_head_col + 1 == snake_body_col: adjoining_body_right = 1
+            if snake_head_col == snake_body_col:
+                if snake_head_row - 1 == snake_body_row : adjoining_body_top = 1
+                if snake_head_row + 1 == snake_body_row: adjoining_body_bottom = 1
+
+            if snake_body_row == snake_body_row:
+                if snake_head_col - 1 == snake_body_col: adjoining_body_left = 1
+                if snake_head_col + 1 == snake_body_col: adjoining_body_right = 1
 
         
         return (food_dir_x, food_dir_y, adjoining_wall_x, adjoining_wall_y, 
